@@ -11,6 +11,8 @@ export class ScannerModal extends Modal {
 	}
 
 	async onOpen() {
+		this.modalEl.style.width = "90vw";
+		this.modalEl.style.height = "80vh";
 		// Create video element
 		// Get User Media
 		try {
