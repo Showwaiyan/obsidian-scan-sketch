@@ -28,6 +28,5 @@ export class ScannerModal extends Modal {
 	async onClose() {
 		// Close steam's each track
 		this.camera.detachCamera();
-		this.close();
 	}
 }
