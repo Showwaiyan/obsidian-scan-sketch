@@ -7,7 +7,7 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
-import { ScannerModal } from "./UI/Modals/cameraModal";
+import { ScannerModal } from "./UI/Modals/scannerModal";
 
 // Remember to rename these classes and interfaces!
 
