@@ -13,15 +13,50 @@ If your plugin does not need CSS, delete this file.
 	height: 80vh;
 }
 
+.scanner-modal .modal-content {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
 .scanner-modal-container {
 	display: flex;
 	width: 100%;
-	height: 100%;
+	flex: 1;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	box-sizing: border-box;
+	padding: 1rem;
 }
 
 .scanner-modal-container canvas {
 	border: 5px solid #43334C;
+}
+
+/* Button Wrapper - Horizontal Layout */
+.button-wrapper {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	justify-content: center;
+	align-items: center;
+	padding: 1rem;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Make icon buttons square */
+.button-wrapper button {
+	width: 48px;
+	height: 48px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+}
+
+.button-wrapper button svg {
+	width: 24px;
+	height: 24px;
 }

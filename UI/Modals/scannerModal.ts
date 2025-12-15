@@ -1,24 +1,28 @@
-import { App, Modal, Notice } from "obsidian";
+import { App, ButtonComponent, Modal, Notice } from "obsidian";
 import { ImagePreview } from "UI/Components/ImagePreview";
 
 export class ScannerModal extends Modal {
 	private container: HTMLElement;
+	private buttonWrapper: HTMLElement;
 	private canvas: ImagePreview;
+	private btnPhotoUpload: ButtonComponent;
 
 	constructor(app: App) {
 		super(app);
 		this.setTitle("Scan Your Note");
 		this.modalEl.addClass("scanner-modal");
+
 		this.container = this.contentEl.createDiv("scanner-modal-container");
 		this.canvas = new ImagePreview(
 			this.container,
 			this.container.createEl("canvas"),
 			4 / 3,
 		);
+
+		this.buttonWrapper = this.contentEl.createDiv("button-wrapper");
 	}
 
 	async onOpen() {
-		// new Notice("Scan-Sketch plugin loaded");
 		try {
 			this.canvas.setup();
 		} catch (error) {
@@ -27,6 +31,13 @@ export class ScannerModal extends Modal {
 				"Cannot Create Image Preview Canvas\nPlease review details in Console",
 			);
 		}
+		
+	//btn setup
+	this.btnPhotoUpload = new ButtonComponent(this.buttonWrapper)
+		.setIcon("image")
+		.setTooltip("Upload image from gallery")
+		.setCta()
+		.onClick(() => new Notice("Button worked"));
 	}
 
 	async onClose() {}
