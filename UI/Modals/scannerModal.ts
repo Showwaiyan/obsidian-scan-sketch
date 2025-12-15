@@ -1,4 +1,4 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, Notice } from "obsidian";
 import { ImagePreview } from "UI/Components/ImagePreview";
 
 export class ScannerModal extends Modal {
@@ -19,8 +19,14 @@ export class ScannerModal extends Modal {
 
 	async onOpen() {
 		// new Notice("Scan-Sketch plugin loaded");
-
-		this.canvas.setup();
+		try {
+			this.canvas.setup();
+		} catch (error) {
+			console.log(`Error: ${error.message}`);
+			new Notice(
+				"Cannot Create Image Preview Canvas\nPlease review details in Console",
+			);
+		}
 	}
 
 	async onClose() {}
