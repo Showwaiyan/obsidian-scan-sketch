@@ -7,8 +7,9 @@ export function uploadImageToCanvas(drawImageOnCanvas: (file: File) => void) {
 	input.onchange = (e: Event) => {
 		const target = e.target as HTMLInputElement;
 		const file = target.files?.[0];
-		if (!file) throw new Error("Please select one and only file to upload");
+		if (!file) return;
 		drawImageOnCanvas(file);
+		input.value = "";
 	};
 	input.click();
 }
