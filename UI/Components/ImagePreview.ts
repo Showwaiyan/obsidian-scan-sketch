@@ -4,7 +4,7 @@ export class ImagePreview {
 	private ctx: CanvasRenderingContext2D;
 	private ratio: number;
 	private img: HTMLImageElement;
-	
+
 	// Store image position and dimensions for future reference
 	private imgX: number;
 	private imgY: number;
@@ -194,10 +194,67 @@ export class ImagePreview {
 
 			// Draw the image centered with letterboxing
 			this.ctx.drawImage(this.img, x, y, scaledWidth, scaledHeight);
-			
+
 			URL.revokeObjectURL(this.img.src);
 		};
-		
+
 		this.img.src = URL.createObjectURL(file);
+	}
+
+	public rotate(degree: number) {
+		// Clear the canvas, so current image is clear and to make clean state to save
+		this.ctx.clearRect(
+			0,
+			0,
+			parseInt(this.canvas.style.width),
+			parseInt(this.canvas.style.height),
+		);
+
+		this.ctx.fillStyle = "#000000";
+		this.ctx.fillRect(
+			0,
+			0,
+			parseInt(this.canvas.style.width),
+			parseInt(this.canvas.style.height),
+		);
+
+		const cacheCanvasWidth: number = parseInt(this.canvas.style.width);
+		const cacheCanvasHeight: number = parseInt(this.canvas.style.height);
+
+		const rad = (degree * Math.PI) / 180;
+
+		const sin = Math.abs(Math.sin(rad));
+		const cos = Math.abs(Math.cos(rad));
+
+		const newWidth = this.imgWidth * cos + this.imgHeight * sin;
+
+		const newHeight = this.imgWidth * sin + this.imgHeight * cos;
+
+		const scale = Math.min(
+			cacheCanvasWidth / newWidth,
+			cacheCanvasHeight / newHeight,
+		);
+
+		this.ctx.save();
+		this.ctx.translate(cacheCanvasWidth / 2, cacheCanvasHeight / 2);
+		this.ctx.rotate(rad);
+		this.ctx.scale(scale, scale);
+
+		this.ctx.drawImage(
+			this.img,
+			-this.imgWidth / 2,
+			-this.imgHeight / 2,
+			this.imgWidth,
+			this.imgHeight,
+		);
+
+		this.imgWidth = newWidth * scale;
+		this.imgHeight = newHeight * scale;
+
+		this.imgX = (cacheCanvasWidth - this.imgWidth) / 2;
+		this.imgY = (cacheCanvasHeight - this.imgHeight) / 2;
+
+		this.ctx.restore();
+
 	}
 }

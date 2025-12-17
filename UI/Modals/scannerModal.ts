@@ -7,6 +7,7 @@ export class ScannerModal extends Modal {
 	private buttonWrapper: HTMLElement;
 	private canvas: ImagePreview;
 	private btnPhotoUpload: ButtonComponent;
+	private btnPhotoRotate: ButtonComponent;
 
 	constructor(app: App) {
 		super(app);
@@ -32,13 +33,20 @@ export class ScannerModal extends Modal {
 				"Cannot Create Image Preview Canvas\nPlease review details in Console",
 			);
 		}
-		
-	//btn setup
-	this.btnPhotoUpload = new ButtonComponent(this.buttonWrapper)
-		.setIcon("image")
-		.setTooltip("Upload image from gallery")
-		.setCta()
-		.onClick(() => uploadImageToCanvas(this.canvas.darawImage.bind(this.canvas)));
+
+		//btn setup
+		this.btnPhotoUpload = new ButtonComponent(this.buttonWrapper)
+			.setIcon("image")
+			.setTooltip("Upload image from gallery")
+			.setCta()
+			.onClick(() =>
+				uploadImageToCanvas(this.canvas.darawImage.bind(this.canvas)),
+			);
+
+		this.btnPhotoRotate = new ButtonComponent(this.buttonWrapper)
+			.setIcon("rotate-cw")
+			.setTooltip("Rotate image 90° clockwise")
+			.onClick(() => this.canvas.rotate(90));
 	}
 
 	async onClose() {}
