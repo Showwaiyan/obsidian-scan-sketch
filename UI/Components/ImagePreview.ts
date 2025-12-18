@@ -11,6 +11,9 @@ export class ImagePreview {
 	private imgWidth: number;
 	private imgHeight: number;
 
+	// for continous rotation
+	private toRotate: number;
+
 	constructor(
 		parent: HTMLElement,
 		element: HTMLCanvasElement,
@@ -27,6 +30,7 @@ export class ImagePreview {
 		this.ctx = ctx;
 
 		this.parent.appendChild(this.canvas);
+		this.toRotate = 0;
 
 		// Wait for next frame to ensure parent has dimensions
 		requestAnimationFrame(() => {
@@ -221,7 +225,12 @@ export class ImagePreview {
 		const cacheCanvasWidth: number = parseInt(this.canvas.style.width);
 		const cacheCanvasHeight: number = parseInt(this.canvas.style.height);
 
-		const rad = (degree * Math.PI) / 180;
+		// Increment rotation counter and wrap around at 4 (360 degrees)
+		this.toRotate = (this.toRotate + 1) % 4;
+		console.log("Rotation count:", this.toRotate);
+		
+		// Calculate total rotation: toRotate * 90 degrees
+		const rad = ((this.toRotate * degree) * Math.PI) / 180;
 
 		const sin = Math.abs(Math.sin(rad));
 		const cos = Math.abs(Math.cos(rad));
@@ -247,12 +256,6 @@ export class ImagePreview {
 			this.imgWidth,
 			this.imgHeight,
 		);
-
-		this.imgWidth = newWidth * scale;
-		this.imgHeight = newHeight * scale;
-
-		this.imgX = (cacheCanvasWidth - this.imgWidth) / 2;
-		this.imgY = (cacheCanvasHeight - this.imgHeight) / 2;
 
 		this.ctx.restore();
 
