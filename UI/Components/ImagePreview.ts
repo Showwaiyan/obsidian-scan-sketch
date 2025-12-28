@@ -54,6 +54,8 @@ export class ImagePreview {
 
 	private setupMouseEvents() {
 		this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
+		this.canvas.addEventListener("mousemove", this.onMouseMove.bind(this));
+		this.canvas.addEventListener("mouseup", this.onMouseUp.bind(this));
 	}
 
 	private onMouseDown(event: MouseEvent) {
@@ -79,6 +81,40 @@ export class ImagePreview {
 			// No crop point was clicked
 			this.draggedPointIndex = -1;
 		}
+	}
+
+	private onMouseMove(event: MouseEvent) {
+		// Only handle if we're currently dragging a point
+		if (this.draggedPointIndex === -1) {
+			return;
+		}
+
+		// Get mouse position relative to canvas
+		const rect = this.canvas.getBoundingClientRect();
+		const mouseX = event.clientX - rect.left;
+		const mouseY = event.clientY - rect.top;
+
+		// Update the dragged crop point's position
+		this.cropPoints[this.draggedPointIndex].x = mouseX;
+		this.cropPoints[this.draggedPointIndex].y = mouseY;
+
+		// Redraw the image and crop points with updated positions
+		this.redrawCroppingPoints();
+	}
+
+	private onMouseUp(event: MouseEvent) {
+		// Only handle if we're currently dragging a point
+		if (this.draggedPointIndex === -1) {
+			return;
+		}
+
+		// Reset dragging state for all points
+		this.cropPoints.forEach(point => {
+			point.isDragging = false;
+		});
+
+		// Reset the dragged point index
+		this.draggedPointIndex = -1;
 	}
 
 	private resize() {
@@ -311,6 +347,11 @@ export class ImagePreview {
 			{ x: this.imgX + this.imgWidth, y: this.imgY + this.imgHeight, isDragging: false }, // Bottom-right
 		];
 
+		this.renderCroppingPoints();
+		this.croppingPointsVisible = true;
+	}
+
+	private renderCroppingPoints() {
 		this.ctx.save();
 
 		// Draw connecting lines between points
@@ -342,12 +383,19 @@ export class ImagePreview {
 			this.ctx.fill();
 		});
 		this.ctx.restore();
+	}
 
-		this.croppingPointsVisible = true;
+	private redrawCroppingPoints() {
+		// Redraw the image (this clears the old crop points)
+		this.redrawImage();
+
+		// Render crop points at their updated positions
+		this.renderCroppingPoints();
 	}
 
 	private removeCroppingPoints() {
 		if (!this.croppingPointsVisible) return;
+
 
 		// Redraw the image to remove the crop points
 		this.redrawImage();
