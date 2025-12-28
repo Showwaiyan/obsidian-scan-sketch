@@ -5,10 +5,14 @@ import { ImagePreview } from "UI/Components/ImagePreview";
 export class ScannerModal extends Modal {
 	private container: HTMLElement;
 	private buttonWrapper: HTMLElement;
+	private confirmButtonWrapper: HTMLElement;
 	private canvas: ImagePreview;
 	private btnPhotoUpload: ButtonComponent;
 	private btnPhotoRotateCW: ButtonComponent;
 	private btnPhotoRotateACW: ButtonComponent;
+	private btnCrop: ButtonComponent;
+	private btnConfirm: ButtonComponent;
+	private btnCancel: ButtonComponent;
 
 	constructor(app: App) {
 		super(app);
@@ -23,6 +27,10 @@ export class ScannerModal extends Modal {
 		);
 
 		this.buttonWrapper = this.contentEl.createDiv("button-wrapper");
+		this.confirmButtonWrapper = this.contentEl.createDiv(
+			"confirm-button-wrapper",
+		);
+		this.confirmButtonWrapper.hide();
 	}
 
 	async onOpen() {
@@ -52,6 +60,47 @@ export class ScannerModal extends Modal {
 			.setIcon("rotate-ccw")
 			.setTooltip("Rotate image 90° counter-clockwise")
 			.onClick(() => this.canvas.rotate(-90));
+
+		this.btnCrop = new ButtonComponent(this.buttonWrapper)
+			.setIcon("crop")
+			.setTooltip("Crop image")
+			.onClick(() => this.toggleCropMode());
+
+		// Confirmation buttons
+		this.btnConfirm = new ButtonComponent(this.confirmButtonWrapper)
+			.setIcon("check")
+			.setTooltip("Confirm")
+			.setCta()
+			.onClick(() => this.confirmCrop());
+
+		this.btnCancel = new ButtonComponent(this.confirmButtonWrapper)
+			.setIcon("x")
+			.setTooltip("Cancel")
+			.onClick(() => this.cancelCrop());
+	}
+
+	private toggleCropMode() {
+		const { state, message } = this.canvas.toggleCroppingPoints(true);
+		new Notice(message);
+		if (!state) {
+			return;
+		}
+		this.buttonWrapper.hide();
+		this.confirmButtonWrapper.show();
+	}
+
+	private confirmCrop() {
+		// TODO: Implement crop confirmation logic
+		this.confirmButtonWrapper.hide();
+		this.buttonWrapper.show();
+	}
+
+	private cancelCrop() {
+		// TODO: Implement crop cancellation logic
+		const { message } = this.canvas.toggleCroppingPoints(false);
+		new Notice(message);
+		this.confirmButtonWrapper.hide();
+		this.buttonWrapper.show();
 	}
 
 	async onClose() {}

@@ -1,3 +1,5 @@
+import { findCropPointAtPosition } from "Services/Interaction";
+
 export class ImagePreview {
 	private parent: HTMLElement;
 	private canvas: HTMLCanvasElement;
@@ -16,7 +18,8 @@ export class ImagePreview {
 
 	// for cropping points
 	private croppingPointsVisible: boolean;
-	private cropPoints: { x: number; y: number }[];
+	private cropPoints: { x: number; y: number; isDragging: boolean }[];
+	private draggedPointIndex: number;
 
 	constructor(
 		parent: HTMLElement,
@@ -37,12 +40,45 @@ export class ImagePreview {
 		this.toRotateDegree = 0;
 		this.croppingPointsVisible = false;
 		this.cropPoints = [];
+		this.draggedPointIndex = -1;
+
+		// Setup mouse event handlers
+		this.setupMouseEvents();
 
 		// Wait for next frame to ensure parent has dimensions
 		requestAnimationFrame(() => {
 			this.resize();
 			this.initializePlaceholder();
 		});
+	}
+
+	private setupMouseEvents() {
+		this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
+	}
+
+	private onMouseDown(event: MouseEvent) {
+		// Only handle mouse events if cropping points are visible
+		if (!this.croppingPointsVisible || this.cropPoints.length === 0) {
+			return;
+		}
+
+		// Get mouse position relative to canvas
+		const rect = this.canvas.getBoundingClientRect();
+		const mouseX = event.clientX - rect.left;
+		const mouseY = event.clientY - rect.top;
+
+		// Find which crop point (if any) was clicked
+		const clickedIndex = findCropPointAtPosition(mouseX, mouseY, this.cropPoints, 10);
+
+		if (clickedIndex !== -1) {
+			// A crop point was clicked
+			this.draggedPointIndex = clickedIndex;
+			this.cropPoints[clickedIndex].isDragging = true;
+			console.log(`Crop point ${clickedIndex} clicked at (${mouseX}, ${mouseY})`);
+		} else {
+			// No crop point was clicked
+			this.draggedPointIndex = -1;
+		}
 	}
 
 	private resize() {
@@ -269,10 +305,10 @@ export class ImagePreview {
 	private drawCroppingPoints() {
 		// Initialize crop points at four corners of the image
 		this.cropPoints = [
-			{ x: this.imgX, y: this.imgY }, // Top-left
-			{ x: this.imgX + this.imgWidth, y: this.imgY }, // Top-right
-			{ x: this.imgX, y: this.imgY + this.imgHeight }, // Bottom-left
-			{ x: this.imgX + this.imgWidth, y: this.imgY + this.imgHeight }, // Bottom-right
+			{ x: this.imgX, y: this.imgY, isDragging: false }, // Top-left
+			{ x: this.imgX + this.imgWidth, y: this.imgY, isDragging: false }, // Top-right
+			{ x: this.imgX, y: this.imgY + this.imgHeight, isDragging: false }, // Bottom-left
+			{ x: this.imgX + this.imgWidth, y: this.imgY + this.imgHeight, isDragging: false }, // Bottom-right
 		];
 
 		this.ctx.save();

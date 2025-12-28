@@ -60,3 +60,29 @@ If your plugin does not need CSS, delete this file.
 	width: 24px;
 	height: 24px;
 }
+
+/* Confirmation Button Wrapper - Centered Layout */
+.confirm-button-wrapper {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	justify-content: center;
+	align-items: center;
+	padding: 1rem;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.confirm-button-wrapper button {
+	width: 48px;
+	height: 48px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+}
+
+.confirm-button-wrapper button svg {
+	width: 24px;
+	height: 24px;
+}
