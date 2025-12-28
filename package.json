@@ -6,7 +6,10 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"test": "vitest",
+		"test:ui": "vitest --ui",
+		"test:coverage": "vitest --coverage"
 	},
 	"keywords": [],
 	"author": "",
@@ -15,10 +18,14 @@
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
+		"@vitest/ui": "^4.0.16",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
+		"happy-dom": "^20.0.11",
+		"jsdom": "^27.4.0",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "4.7.4",
+		"vitest": "^4.0.16"
 	}
 }
