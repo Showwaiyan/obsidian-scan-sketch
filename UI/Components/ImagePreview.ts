@@ -44,8 +44,8 @@ export class ImagePreview {
 		this.cropPoints = [];
 		this.draggedPointIndex = -1;
 
-		// Setup mouse event handlers
-		this.setupMouseEvents();
+		// Setup input event handlers (mouse and touch)
+		this.setupInputEvents();
 
 		// Wait for next frame to ensure parent has dimensions
 		requestAnimationFrame(() => {
@@ -54,10 +54,39 @@ export class ImagePreview {
 		});
 	}
 
-	private setupMouseEvents() {
+	private setupInputEvents() {
+		// Mouse events (desktop)
 		this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
 		this.canvas.addEventListener("mousemove", this.onMouseMove.bind(this));
 		this.canvas.addEventListener("mouseup", this.onMouseUp.bind(this));
+
+		// Touch events (mobile)
+		this.canvas.addEventListener("touchstart", this.onTouchStart.bind(this), { passive: false });
+		this.canvas.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false });
+		this.canvas.addEventListener("touchend", this.onTouchEnd.bind(this));
+	}
+
+	/**
+	 * Get pointer position from mouse or touch event
+	 * @param event - Mouse or Touch event
+	 * @returns Position {x, y} relative to canvas, or null if invalid
+	 */
+	private getPointerPosition(event: MouseEvent | TouchEvent): { x: number; y: number } | null {
+		const rect = this.canvas.getBoundingClientRect();
+
+		if (event instanceof MouseEvent) {
+			return {
+				x: event.clientX - rect.left,
+				y: event.clientY - rect.top,
+			};
+		} else if (event instanceof TouchEvent && event.touches.length > 0) {
+			return {
+				x: event.touches[0].clientX - rect.left,
+				y: event.touches[0].clientY - rect.top,
+			};
+		}
+
+		return null;
 	}
 
 	private onMouseDown(event: MouseEvent) {
@@ -105,6 +134,69 @@ export class ImagePreview {
 	}
 
 	private onMouseUp(event: MouseEvent) {
+		// Only handle if we're currently dragging a point
+		if (this.draggedPointIndex === -1) {
+			return;
+		}
+
+		// Reset dragging state for all points
+		this.cropPoints.forEach(point => {
+			point.isDragging = false;
+		});
+
+		// Reset the dragged point index
+		this.draggedPointIndex = -1;
+	}
+
+	private onTouchStart(event: TouchEvent) {
+		// Only handle touch events if cropping points are visible
+		if (!this.croppingPointsVisible || this.cropPoints.length === 0) {
+			return;
+		}
+
+		// Prevent default to avoid scrolling while dragging
+		event.preventDefault();
+
+		// Get touch position relative to canvas
+		const pos = this.getPointerPosition(event);
+		if (!pos) return;
+
+		// Find which crop point (if any) was touched
+		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 10);
+
+		if (clickedIndex !== -1) {
+			// A crop point was touched
+			this.draggedPointIndex = clickedIndex;
+			this.cropPoints[clickedIndex].isDragging = true;
+			console.log(`Crop point ${clickedIndex} touched at (${pos.x}, ${pos.y})`);
+		} else {
+			// No crop point was touched
+			this.draggedPointIndex = -1;
+		}
+	}
+
+	private onTouchMove(event: TouchEvent) {
+		// Only handle if we're currently dragging a point
+		if (this.draggedPointIndex === -1) {
+			return;
+		}
+
+		// Prevent scrolling while dragging
+		event.preventDefault();
+
+		// Get touch position relative to canvas
+		const pos = this.getPointerPosition(event);
+		if (!pos) return;
+
+		// Update the dragged crop point's position
+		this.cropPoints[this.draggedPointIndex].x = pos.x;
+		this.cropPoints[this.draggedPointIndex].y = pos.y;
+
+		// Redraw the image and crop points with updated positions
+		this.redrawCroppingPoints();
+	}
+
+	private onTouchEnd(event: TouchEvent) {
 		// Only handle if we're currently dragging a point
 		if (this.draggedPointIndex === -1) {
 			return;
