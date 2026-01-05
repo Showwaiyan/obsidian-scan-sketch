@@ -548,6 +548,10 @@ export class ImagePreview {
 				outputDimensions: { width, height },
 			});
 
+			// IMPORTANT: Redraw the image WITHOUT crop points before capturing
+			// This prevents crop points from being included in the final cropped image
+			this.redrawImage();
+
 			// Create source coordinates (current crop point positions)
 			const srcPoints = [
 				orderedPoints[0].x, orderedPoints[0].y, // Top-left
@@ -584,7 +588,7 @@ export class ImagePreview {
 			const cssWidth = parseInt(this.canvas.style.width);
 			const cssHeight = parseInt(this.canvas.style.height);
 			
-			// Get the current image data from the main canvas
+			// Get the current image data from the main canvas (now without crop points)
 			const sourceImageData = this.ctx.getImageData(0, 0, cssWidth, cssHeight);
 
 			// Apply perspective transformation pixel by pixel

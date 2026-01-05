@@ -13,6 +13,7 @@ export class ScannerModal extends Modal {
 	private btnCrop: ButtonComponent;
 	private btnConfirm: ButtonComponent;
 	private btnCancel: ButtonComponent;
+	private processingNotice: Notice | null;
 
 	constructor(app: App) {
 		super(app);
@@ -31,6 +32,7 @@ export class ScannerModal extends Modal {
 			"confirm-button-wrapper",
 		);
 		this.confirmButtonWrapper.hide();
+		this.processingNotice = null;
 	}
 
 	async onOpen() {
@@ -89,26 +91,97 @@ export class ScannerModal extends Modal {
 		this.confirmButtonWrapper.show();
 	}
 
-	private confirmCrop() {
-		// TEMPORARY TEST: Call the perspective crop function
-		console.log("=== TESTING PERSPECTIVE CROP ===");
-		const result = this.canvas.performPerspectiveCrop();
-		console.log("Crop result:", result);
-		new Notice(result.message);
-		
-		if (result.success) {
-			this.confirmButtonWrapper.hide();
-			this.buttonWrapper.show();
+	private async confirmCrop() {
+		try {
+			// Show processing notice
+			this.processingNotice = new Notice("Processing perspective crop...", 0);
+
+			// Disable buttons during processing
+			this.setButtonsEnabled(false);
+
+			// Add a small delay to allow UI to update
+			await new Promise(resolve => setTimeout(resolve, 100));
+
+			// Perform the perspective crop
+			const result = this.canvas.performPerspectiveCrop();
+
+			// Hide processing notice
+			if (this.processingNotice) {
+				this.processingNotice.hide();
+				this.processingNotice = null;
+			}
+
+			if (result.success) {
+				// Show success message
+				new Notice(result.message, 3000);
+
+				// Wait a brief moment for the crop to render
+				await new Promise(resolve => setTimeout(resolve, 100));
+
+				// Hide crop confirmation buttons and show main buttons
+				this.confirmButtonWrapper.hide();
+				this.buttonWrapper.show();
+
+				// Re-enable buttons
+				this.setButtonsEnabled(true);
+			} else {
+				// Show error message
+				new Notice(result.message, 5000);
+
+				// Re-enable buttons so user can try again or cancel
+				this.setButtonsEnabled(true);
+			}
+		} catch (error) {
+			// Hide processing notice if it's still showing
+			if (this.processingNotice) {
+				this.processingNotice.hide();
+				this.processingNotice = null;
+			}
+
+			// Log error for debugging
+			console.error("Error in confirmCrop:", error);
+
+			// Show user-friendly error message
+			new Notice(
+				`Crop failed: ${error.message || "Unknown error"}\nCheck console for details.`,
+				6000,
+			);
+
+			// Re-enable buttons
+			this.setButtonsEnabled(true);
 		}
 	}
 
 	private cancelCrop() {
-		// TODO: Implement crop cancellation logic
+		// Remove the cropping points
 		const { message } = this.canvas.toggleCroppingPoints(false);
-		new Notice(message);
+		new Notice(message, 2000);
+
+		// Hide crop confirmation buttons and show main buttons
 		this.confirmButtonWrapper.hide();
 		this.buttonWrapper.show();
 	}
 
-	async onClose() {}
+	/**
+	 * Enable or disable all buttons during processing
+	 */
+	private setButtonsEnabled(enabled: boolean) {
+		// Main buttons
+		this.btnPhotoUpload.setDisabled(!enabled);
+		this.btnPhotoRotateCW.setDisabled(!enabled);
+		this.btnPhotoRotateACW.setDisabled(!enabled);
+		this.btnCrop.setDisabled(!enabled);
+
+		// Confirmation buttons
+		this.btnConfirm.setDisabled(!enabled);
+		this.btnCancel.setDisabled(!enabled);
+	}
+
+	async onClose() {
+		// Clean up processing notice if modal is closed while processing
+		if (this.processingNotice) {
+			this.processingNotice.hide();
+			this.processingNotice = null;
+		}
+	}
 }
