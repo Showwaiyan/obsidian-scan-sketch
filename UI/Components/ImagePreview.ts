@@ -1,4 +1,6 @@
 import { findCropPointAtPosition } from "Services/Interaction";
+// @ts-ignore - No type definitions available for perspective-transform
+import PerspT from "perspective-transform";
 
 export class ImagePreview {
 	private parent: HTMLElement;
@@ -422,5 +424,257 @@ export class ImagePreview {
 			}
 		}
 		return { state, message };
+	}
+
+	/**
+	 * Helper: Calculate the distance between two points
+	 */
+	private calculateDistance(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
+		return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+	}
+
+	/**
+	 * Helper: Calculate output dimensions based on crop points
+	 * Uses the maximum of opposite sides to preserve aspect ratio
+	 */
+	private calculateOutputDimensions(): { width: number; height: number } {
+		if (this.cropPoints.length !== 4) {
+			throw new Error("Need exactly 4 crop points to calculate dimensions");
+		}
+
+		// Calculate distances between points
+		// Top edge: point 0 to point 1
+		const topWidth = this.calculateDistance(this.cropPoints[0], this.cropPoints[1]);
+		
+		// Bottom edge: point 2 to point 3
+		const bottomWidth = this.calculateDistance(this.cropPoints[2], this.cropPoints[3]);
+		
+		// Left edge: point 0 to point 2
+		const leftHeight = this.calculateDistance(this.cropPoints[0], this.cropPoints[2]);
+		
+		// Right edge: point 1 to point 3
+		const rightHeight = this.calculateDistance(this.cropPoints[1], this.cropPoints[3]);
+
+		// Use maximum dimensions to avoid losing content
+		const width = Math.max(topWidth, bottomWidth);
+		const height = Math.max(leftHeight, rightHeight);
+
+		return { width: Math.round(width), height: Math.round(height) };
+	}
+
+	/**
+	 * Helper: Order crop points in correct sequence (TL, TR, BL, BR)
+	 * This ensures the perspective transform works correctly
+	 */
+	private getOrderedCropPoints(): { x: number; y: number }[] {
+		if (this.cropPoints.length !== 4) {
+			throw new Error("Need exactly 4 crop points");
+		}
+
+		// Copy points to avoid modifying original
+		const points = [...this.cropPoints];
+
+		// Find the top-left point (smallest sum of x + y)
+		points.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+		const topLeft = points[0];
+
+		// Find the bottom-right point (largest sum of x + y)
+		const bottomRight = points[3];
+
+		// Of the remaining two points, find top-right and bottom-left
+		const remaining = [points[1], points[2]];
+		
+		// Top-right has smaller y (or larger x if y is similar)
+		// Bottom-left has larger y (or smaller x if y is similar)
+		remaining.sort((a, b) => {
+			const diffY = a.y - b.y;
+			if (Math.abs(diffY) > 10) return diffY; // Use y if significantly different
+			return b.x - a.x; // Otherwise use x (descending)
+		});
+
+		const topRight = remaining[0];
+		const bottomLeft = remaining[1];
+
+		// Return in order: TL, TR, BL, BR
+		return [topLeft, topRight, bottomLeft, bottomRight];
+	}
+
+	/**
+	 * Perform perspective crop transformation
+	 * Transforms the quadrilateral defined by crop points into a rectangle
+	 * @returns Object with success status and message
+	 */
+	public performPerspectiveCrop(): { success: boolean; message: string } {
+		try {
+			// Validate crop points exist
+			if (!this.cropPoints || this.cropPoints.length !== 4) {
+				return {
+					success: false,
+					message: "Need exactly 4 crop points. Please show crop points first.",
+				};
+			}
+
+			// Validate image exists
+			if (!this.img) {
+				return {
+					success: false,
+					message: "No image loaded. Please upload an image first.",
+				};
+			}
+
+			// Get ordered crop points (TL, TR, BL, BR)
+			const orderedPoints = this.getOrderedCropPoints();
+
+			// Calculate output dimensions
+			const { width, height } = this.calculateOutputDimensions();
+
+			// Validate dimensions
+			if (width < 50 || height < 50) {
+				return {
+					success: false,
+					message: "Crop area too small. Minimum dimensions: 50x50 pixels.",
+				};
+			}
+
+			if (width > 5000 || height > 5000) {
+				return {
+					success: false,
+					message: "Crop area too large. Maximum dimensions: 5000x5000 pixels.",
+				};
+			}
+
+			console.log("Performing perspective crop:", {
+				points: orderedPoints,
+				outputDimensions: { width, height },
+			});
+
+			// Create source coordinates (current crop point positions)
+			const srcPoints = [
+				orderedPoints[0].x, orderedPoints[0].y, // Top-left
+				orderedPoints[1].x, orderedPoints[1].y, // Top-right
+				orderedPoints[2].x, orderedPoints[2].y, // Bottom-left
+				orderedPoints[3].x, orderedPoints[3].y, // Bottom-right
+			];
+
+			// Create destination coordinates (corners of output rectangle)
+			const dstPoints = [
+				0, 0,           // Top-left
+				width, 0,       // Top-right
+				0, height,      // Bottom-left
+				width, height,  // Bottom-right
+			];
+
+			// Create perspective transform
+			const perspT = PerspT(srcPoints, dstPoints);
+
+			// Create temporary canvas for the cropped output
+			const tempCanvas = document.createElement("canvas");
+			tempCanvas.width = width;
+			tempCanvas.height = height;
+			const tempCtx = tempCanvas.getContext("2d");
+
+			if (!tempCtx) {
+				return {
+					success: false,
+					message: "Failed to create temporary canvas context.",
+				};
+			}
+
+			// Get current canvas state as image data for transformation
+			const cssWidth = parseInt(this.canvas.style.width);
+			const cssHeight = parseInt(this.canvas.style.height);
+			
+			// Get the current image data from the main canvas
+			const sourceImageData = this.ctx.getImageData(0, 0, cssWidth, cssHeight);
+
+			// Apply perspective transformation pixel by pixel
+			const outputImageData = tempCtx.createImageData(width, height);
+			
+			for (let y = 0; y < height; y++) {
+				for (let x = 0; x < width; x++) {
+					// Transform destination coordinates to source coordinates
+					const srcCoords = perspT.transformInverse(x, y);
+					const srcX = Math.round(srcCoords[0]);
+					const srcY = Math.round(srcCoords[1]);
+
+					// Check if source coordinates are within bounds
+					if (srcX >= 0 && srcX < cssWidth && srcY >= 0 && srcY < cssHeight) {
+						// Copy pixel from source to destination
+						const srcIdx = (srcY * cssWidth + srcX) * 4;
+						const dstIdx = (y * width + x) * 4;
+
+						outputImageData.data[dstIdx] = sourceImageData.data[srcIdx];         // R
+						outputImageData.data[dstIdx + 1] = sourceImageData.data[srcIdx + 1]; // G
+						outputImageData.data[dstIdx + 2] = sourceImageData.data[srcIdx + 2]; // B
+						outputImageData.data[dstIdx + 3] = sourceImageData.data[srcIdx + 3]; // A
+					} else {
+						// Outside bounds - set to transparent/black
+						const dstIdx = (y * width + x) * 4;
+						outputImageData.data[dstIdx + 3] = 0; // Transparent
+					}
+				}
+			}
+
+			// Put the transformed image data onto the temporary canvas
+			tempCtx.putImageData(outputImageData, 0, 0);
+
+			// Create a new image from the cropped result
+			const croppedImage = new Image();
+			croppedImage.onload = () => {
+				// Replace the current image with the cropped version
+				this.img = croppedImage;
+				
+				// Reset rotation
+				this.toRotateDegree = 0;
+
+				// Recalculate and redraw with the new cropped image
+				const cssWidth = parseInt(this.canvas.style.width);
+				const cssHeight = parseInt(this.canvas.style.height);
+
+				// Calculate scale to fit cropped image inside canvas
+				const scale = Math.min(
+					cssWidth / width,
+					cssHeight / height,
+				);
+
+				const scaledWidth = width * scale;
+				const scaledHeight = height * scale;
+
+				const x = (cssWidth - scaledWidth) / 2;
+				const y = (cssHeight - scaledHeight) / 2;
+
+				// Update stored dimensions
+				this.imgX = x;
+				this.imgY = y;
+				this.imgWidth = scaledWidth;
+				this.imgHeight = scaledHeight;
+
+				// Clear canvas and redraw with cropped image
+				this.ctx.clearRect(0, 0, cssWidth, cssHeight);
+				this.ctx.fillStyle = "#000000";
+				this.ctx.fillRect(0, 0, cssWidth, cssHeight);
+				this.ctx.drawImage(this.img, x, y, scaledWidth, scaledHeight);
+
+				// Hide crop points
+				this.cropPoints = [];
+				this.croppingPointsVisible = false;
+
+				console.log("Perspective crop completed successfully");
+			};
+
+			croppedImage.src = tempCanvas.toDataURL();
+
+			return {
+				success: true,
+				message: "Perspective crop applied successfully",
+			};
+
+		} catch (error) {
+			console.error("Error during perspective crop:", error);
+			return {
+				success: false,
+				message: `Crop failed: ${error.message}`,
+			};
+		}
 	}
 }

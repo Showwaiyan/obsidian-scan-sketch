@@ -90,9 +90,16 @@ export class ScannerModal extends Modal {
 	}
 
 	private confirmCrop() {
-		// TODO: Implement crop confirmation logic
-		this.confirmButtonWrapper.hide();
-		this.buttonWrapper.show();
+		// TEMPORARY TEST: Call the perspective crop function
+		console.log("=== TESTING PERSPECTIVE CROP ===");
+		const result = this.canvas.performPerspectiveCrop();
+		console.log("Crop result:", result);
+		new Notice(result.message);
+		
+		if (result.success) {
+			this.confirmButtonWrapper.hide();
+			this.buttonWrapper.show();
+		}
 	}
 
 	private cancelCrop() {
