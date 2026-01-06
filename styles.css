@@ -86,3 +86,39 @@ If your plugin does not need CSS, delete this file.
 	width: 24px;
 	height: 24px;
 }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+	.scanner-modal {
+		width: 98vw;   /* Use almost full width (was 90vw) */
+		height: 90vh;  /* Use more height (was 80vh) */
+	}
+	
+	.scanner-modal-container {
+		padding: 0.5rem; /* Reduce padding to maximize canvas space (was 1rem) */
+	}
+	
+	/* Reduce button padding on mobile to save vertical space */
+	.button-wrapper,
+	.confirm-button-wrapper {
+		padding: 0.75rem; /* Reduced from 1rem */
+	}
+}
+
+/* Extra optimization for very small screens (phones in portrait) */
+@media (max-width: 480px) {
+	.scanner-modal {
+		width: 100vw;  /* Full width on small phones */
+		height: 95vh;  /* Nearly full height */
+	}
+	
+	.scanner-modal-container {
+		padding: 0.25rem; /* Minimal padding */
+	}
+	
+	.button-wrapper,
+	.confirm-button-wrapper {
+		padding: 0.5rem;
+		gap: 8px; /* Slightly reduced gap between buttons */
+	}
+}

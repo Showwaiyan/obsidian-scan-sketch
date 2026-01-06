@@ -216,7 +216,8 @@ export class ImagePreview {
 	private resize() {
 		const parentWidth = this.parent.clientWidth;
 
-		const width: number = parentWidth / 1.4;
+		// Reduced divisor from 1.4 to 1.15 for larger canvas on all devices
+		const width: number = parentWidth / 1.15;
 		const height: number = width / this.ratio;
 
 		/*
@@ -553,7 +554,13 @@ export class ImagePreview {
 		const width = Math.max(topWidth, bottomWidth);
 		const height = Math.max(leftHeight, rightHeight);
 
-		return { width: Math.round(width), height: Math.round(height) };
+		// Multiply by DPR to preserve full resolution on high-DPI displays
+		const dpr = window.devicePixelRatio || 1;
+
+		return { 
+			width: Math.round(width * dpr), 
+			height: Math.round(height * dpr) 
+		};
 	}
 
 	/**
@@ -756,9 +763,13 @@ export class ImagePreview {
 				this.imgHeight = scaledHeight;
 
 				// Clear canvas and redraw with cropped image
-				this.ctx.clearRect(0, 0, cssWidth, cssHeight);
+				// Account for DPR to properly clear the entire canvas
+				const dpr = window.devicePixelRatio || 1;
+				const actualWidth = Math.floor(cssWidth * dpr);
+				const actualHeight = Math.floor(cssHeight * dpr);
+				this.ctx.clearRect(0, 0, actualWidth, actualHeight);
 				this.ctx.fillStyle = "#000000";
-				this.ctx.fillRect(0, 0, cssWidth, cssHeight);
+				this.ctx.fillRect(0, 0, actualWidth, actualHeight);
 				this.ctx.drawImage(this.img, x, y, scaledWidth, scaledHeight);
 
 				// Hide crop points
