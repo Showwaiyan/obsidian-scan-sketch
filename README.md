@@ -1,3 +1,5 @@
+> This is template readme from default repo, README for current repo is not updated yet
+
 # Obsidian Sample Plugin
 
 This is a sample plugin for Obsidian (https://obsidian.md).
