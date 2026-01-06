@@ -101,7 +101,8 @@ export class ImagePreview {
 		const mouseY = event.clientY - rect.top;
 
 		// Find which crop point (if any) was clicked
-		const clickedIndex = findCropPointAtPosition(mouseX, mouseY, this.cropPoints, 10);
+		// Use larger hit area (20px) for better precision
+		const clickedIndex = findCropPointAtPosition(mouseX, mouseY, this.cropPoints, 20);
 
 		if (clickedIndex !== -1) {
 			// A crop point was clicked
@@ -162,7 +163,8 @@ export class ImagePreview {
 		if (!pos) return;
 
 		// Find which crop point (if any) was touched
-		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 10);
+		// Use larger hit area (30px) for easier mobile touch
+		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 30);
 
 		if (clickedIndex !== -1) {
 			// A crop point was touched
@@ -459,20 +461,20 @@ export class ImagePreview {
 		this.ctx.lineWidth = 2;
 		this.ctx.stroke();
 
-		// Draw the crop points
+		// Draw the crop points with larger size for better mobile visibility
 		this.cropPoints.forEach((point) => {
-			// Draw outer circle (white)
+			// Draw outer circle (white) - increased from 10 to 15
 			this.ctx.beginPath();
-			this.ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+			this.ctx.arc(point.x, point.y, 15, 0, Math.PI * 2);
 			this.ctx.fillStyle = "#ffffff";
 			this.ctx.fill();
 			this.ctx.strokeStyle = "#000000";
 			this.ctx.lineWidth = 2;
 			this.ctx.stroke();
 
-			// Draw inner circle (blue)
+			// Draw inner circle (blue) - increased from 6 to 9
 			this.ctx.beginPath();
-			this.ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+			this.ctx.arc(point.x, point.y, 9, 0, Math.PI * 2);
 			this.ctx.fillStyle = "#3b82f6";
 			this.ctx.fill();
 		});
@@ -679,9 +681,15 @@ export class ImagePreview {
 			// Get current canvas state as image data for transformation
 			const cssWidth = parseInt(this.canvas.style.width);
 			const cssHeight = parseInt(this.canvas.style.height);
+			const dpr = window.devicePixelRatio || 1;
+			
+			// IMPORTANT: Get image data using actual canvas dimensions (accounting for DPR)
+			// The canvas internal dimensions are cssWidth * dpr × cssHeight * dpr
+			const actualWidth = Math.floor(cssWidth * dpr);
+			const actualHeight = Math.floor(cssHeight * dpr);
 			
 			// Get the current image data from the main canvas (now without crop points)
-			const sourceImageData = this.ctx.getImageData(0, 0, cssWidth, cssHeight);
+			const sourceImageData = this.ctx.getImageData(0, 0, actualWidth, actualHeight);
 
 			// Apply perspective transformation pixel by pixel
 			const outputImageData = tempCtx.createImageData(width, height);
@@ -690,13 +698,15 @@ export class ImagePreview {
 				for (let x = 0; x < width; x++) {
 					// Transform destination coordinates to source coordinates
 					const srcCoords = perspT.transformInverse(x, y);
-					const srcX = Math.round(srcCoords[0]);
-					const srcY = Math.round(srcCoords[1]);
+					
+					// Scale coordinates by DPR to match the actual canvas dimensions
+					const srcX = Math.round(srcCoords[0] * dpr);
+					const srcY = Math.round(srcCoords[1] * dpr);
 
-					// Check if source coordinates are within bounds
-					if (srcX >= 0 && srcX < cssWidth && srcY >= 0 && srcY < cssHeight) {
+					// Check if source coordinates are within bounds (using actual canvas dimensions)
+					if (srcX >= 0 && srcX < actualWidth && srcY >= 0 && srcY < actualHeight) {
 						// Copy pixel from source to destination
-						const srcIdx = (srcY * cssWidth + srcX) * 4;
+						const srcIdx = (srcY * actualWidth + srcX) * 4;
 						const dstIdx = (y * width + x) * 4;
 
 						outputImageData.data[dstIdx] = sourceImageData.data[srcIdx];         // R
