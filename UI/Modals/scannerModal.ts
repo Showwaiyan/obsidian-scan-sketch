@@ -24,7 +24,7 @@ export class ScannerModal extends Modal {
 		this.canvas = new ImagePreview(
 			this.container,
 			this.container.createEl("canvas"),
-			4 / 3,
+			1,  // Square 1:1 ratio for initial placeholder
 		);
 
 		this.buttonWrapper = this.contentEl.createDiv("button-wrapper");

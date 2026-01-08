@@ -23,6 +23,11 @@ export class ImagePreview {
 	private cropPoints: { x: number; y: number; isDragging: boolean }[];
 	private draggedPointIndex: number;
 
+	// for magnifier loupe
+	private magnifierRadius: number;
+	private magnifierZoom: number;
+	private magnifierOffset: number;
+
 	constructor(
 		parent: HTMLElement,
 		element: HTMLCanvasElement,
@@ -43,6 +48,11 @@ export class ImagePreview {
 		this.croppingPointsVisible = false;
 		this.cropPoints = [];
 		this.draggedPointIndex = -1;
+
+		// Initialize magnifier settings
+		this.magnifierRadius = 60;      // Size of magnifier circle (radius in pixels)
+		this.magnifierZoom = 2.5;       // Magnification level
+		this.magnifierOffset = 90;      // Distance from touch point (pixels)
 
 		// Setup input event handlers (mouse and touch)
 		this.setupInputEvents();
@@ -132,6 +142,9 @@ export class ImagePreview {
 
 		// Redraw the image and crop points with updated positions
 		this.redrawCroppingPoints();
+
+		// Draw magnifier loupe (useful for desktop precision too)
+		this.renderMagnifier(mouseX, mouseY);
 	}
 
 	private onMouseUp(event: MouseEvent) {
@@ -147,6 +160,9 @@ export class ImagePreview {
 
 		// Reset the dragged point index
 		this.draggedPointIndex = -1;
+
+		// Redraw without magnifier
+		this.redrawCroppingPoints();
 	}
 
 	private onTouchStart(event: TouchEvent) {
@@ -196,6 +212,9 @@ export class ImagePreview {
 
 		// Redraw the image and crop points with updated positions
 		this.redrawCroppingPoints();
+
+		// Draw magnifier loupe to help with precision
+		this.renderMagnifier(pos.x, pos.y);
 	}
 
 	private onTouchEnd(event: TouchEvent) {
@@ -211,6 +230,9 @@ export class ImagePreview {
 
 		// Reset the dragged point index
 		this.draggedPointIndex = -1;
+
+		// Redraw without magnifier
+		this.redrawCroppingPoints();
 	}
 
 	private resize() {
@@ -236,6 +258,43 @@ export class ImagePreview {
 		this.canvas.width = Math.floor(width * dpr);
 		this.canvas.height = Math.floor(height * dpr);
 
+		this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	}
+
+	/**
+	 * Resize canvas to match the uploaded image's aspect ratio
+	 * This ensures maximum resolution usage with no letterboxing
+	 * @param imageWidth - Width of the source image
+	 * @param imageHeight - Height of the source image
+	 */
+	private resizeToImage(imageWidth: number, imageHeight: number) {
+		const parentWidth = this.parent.clientWidth;
+		const parentHeight = this.parent.clientHeight;
+		
+		// Calculate image aspect ratio
+		const imageRatio = imageWidth / imageHeight;
+		
+		// Start with width-constrained size
+		let canvasWidth = parentWidth / 1.15;
+		let canvasHeight = canvasWidth / imageRatio;
+		
+		// Cap maximum height at 80% of parent to leave space for buttons
+		// This prevents extremely tall canvases from pushing UI off-screen
+		const maxHeight = parentHeight * 0.8;
+		if (canvasHeight > maxHeight) {
+			canvasHeight = maxHeight;
+			canvasWidth = canvasHeight * imageRatio;
+		}
+		
+		// Apply DPR for sharp rendering
+		const dpr: number = window.devicePixelRatio || 1;
+		
+		this.canvas.style.width = `${canvasWidth}px`;
+		this.canvas.style.height = `${canvasHeight}px`;
+		
+		this.canvas.width = Math.floor(canvasWidth * dpr);
+		this.canvas.height = Math.floor(canvasHeight * dpr);
+		
 		this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}
 
@@ -342,37 +401,26 @@ export class ImagePreview {
 		this.img = new Image();
 
 		this.img.onload = () => {
-			// Get CSS dimensions (because we're using DPR transform)
+			// Resize canvas to match image aspect ratio (eliminates letterboxing)
+			this.resizeToImage(this.img.width, this.img.height);
+
+			// Get NEW canvas dimensions after resize
 			const cssWidth = parseInt(this.canvas.style.width);
 			const cssHeight = parseInt(this.canvas.style.height);
 
-			// Clear canvas and fill with black background (letterbox bars)
+			// Clear canvas with black background
 			this.ctx.clearRect(0, 0, cssWidth, cssHeight);
 			this.ctx.fillStyle = "#000000";
 			this.ctx.fillRect(0, 0, cssWidth, cssHeight);
 
-			// Calculate scale to fit image inside canvas (contain behavior)
-			const scale = Math.min(
-				cssWidth / this.img.width,
-				cssHeight / this.img.height,
-			);
+			// Image fills entire canvas (no letterboxing, maximum resolution)
+			this.imgX = 0;
+			this.imgY = 0;
+			this.imgWidth = cssWidth;
+			this.imgHeight = cssHeight;
 
-			// Calculate scaled dimensions
-			const scaledWidth = this.img.width * scale;
-			const scaledHeight = this.img.height * scale;
-
-			// Calculate position to center the image
-			const x = (cssWidth - scaledWidth) / 2;
-			const y = (cssHeight - scaledHeight) / 2;
-
-			// Store image position and dimensions for future reference
-			this.imgX = x;
-			this.imgY = y;
-			this.imgWidth = scaledWidth;
-			this.imgHeight = scaledHeight;
-
-			// Draw the image centered with letterboxing
-			this.ctx.drawImage(this.img, x, y, scaledWidth, scaledHeight);
+			// Draw image at full canvas size
+			this.ctx.drawImage(this.img, 0, 0, cssWidth, cssHeight);
 
 			URL.revokeObjectURL(this.img.src);
 		};
@@ -385,7 +433,7 @@ export class ImagePreview {
 		const cssWidth = parseInt(this.canvas.style.width);
 		const cssHeight = parseInt(this.canvas.style.height);
 
-		// Clear canvas and fill with black background (letterbox bars)
+		// Clear canvas and fill with black background
 		this.ctx.clearRect(0, 0, cssWidth, cssHeight);
 		this.ctx.fillStyle = "#000000";
 		this.ctx.fillRect(0, 0, cssWidth, cssHeight);
@@ -394,42 +442,48 @@ export class ImagePreview {
 		if (this.toRotateDegree !== 0) {
 			// Redraw with rotation
 			const rad = (this.toRotateDegree * Math.PI) / 180;
-			const sin = Math.abs(Math.sin(rad));
-			const cos = Math.abs(Math.cos(rad));
 
-			const newWidth = this.imgWidth * cos + this.imgHeight * sin;
-			const newHeight = this.imgWidth * sin + this.imgHeight * cos;
-
-			const scale = Math.min(
-				cssWidth / newWidth,
-				cssHeight / newHeight,
-			);
-
+			// Rotate around center of canvas
 			this.ctx.save();
 			this.ctx.translate(cssWidth / 2, cssHeight / 2);
 			this.ctx.rotate(rad);
-			this.ctx.scale(scale, scale);
 
+			// Draw image centered (fills entire canvas)
 			this.ctx.drawImage(
 				this.img,
-				-this.imgWidth / 2,
-				-this.imgHeight / 2,
-				this.imgWidth,
-				this.imgHeight,
+				-cssWidth / 2,
+				-cssHeight / 2,
+				cssWidth,
+				cssHeight,
 			);
 
 			this.ctx.restore();
 		} else {
-			// Redraw without rotation
-			this.ctx.drawImage(this.img, this.imgX, this.imgY, this.imgWidth, this.imgHeight);
+			// Redraw without rotation (fills entire canvas)
+			this.ctx.drawImage(this.img, 0, 0, cssWidth, cssHeight);
 		}
 	}
 
 	public rotate(degree: number) {
 		console.log("Rotation count:", this.toRotateDegree);
 		
+		// Clear crop points for safety (positions become invalid after rotation)
+		this.removeCroppingPoints();
+		
 		// Update rotation degree
 		this.toRotateDegree = this.toRotateDegree + degree;
+		
+		// Normalize to 0-360 range
+		const normalizedDegree = ((this.toRotateDegree % 360) + 360) % 360;
+		
+		// If at 90° or 270°, swap canvas dimensions (portrait ↔ landscape)
+		if (normalizedDegree === 90 || normalizedDegree === 270) {
+			// Swap: use image height as canvas width, and vice versa
+			this.resizeToImage(this.img.height, this.img.width);
+		} else {
+			// 0° or 180°: use original image dimensions
+			this.resizeToImage(this.img.width, this.img.height);
+		}
 		
 		// Redraw the image with new rotation
 		this.redrawImage();
@@ -462,20 +516,20 @@ export class ImagePreview {
 		this.ctx.lineWidth = 2;
 		this.ctx.stroke();
 
-		// Draw the crop points with larger size for better mobile visibility
+		// Draw the crop points - reduced size for better usability
 		this.cropPoints.forEach((point) => {
-			// Draw outer circle (white) - increased from 10 to 15
+			// Draw outer circle (white) - reduced from 15 to 12
 			this.ctx.beginPath();
-			this.ctx.arc(point.x, point.y, 15, 0, Math.PI * 2);
+			this.ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
 			this.ctx.fillStyle = "#ffffff";
 			this.ctx.fill();
 			this.ctx.strokeStyle = "#000000";
 			this.ctx.lineWidth = 2;
 			this.ctx.stroke();
 
-			// Draw inner circle (blue) - increased from 6 to 9
+			// Draw inner circle (blue) - reduced from 9 to 7
 			this.ctx.beginPath();
-			this.ctx.arc(point.x, point.y, 9, 0, Math.PI * 2);
+			this.ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
 			this.ctx.fillStyle = "#3b82f6";
 			this.ctx.fill();
 		});
@@ -488,6 +542,145 @@ export class ImagePreview {
 
 		// Render crop points at their updated positions
 		this.renderCroppingPoints();
+	}
+
+	/**
+	 * Render a magnifying loupe at the specified position
+	 * Shows a zoomed view of the area around the point being dragged
+	 * @param pointX - X coordinate of the point being dragged
+	 * @param pointY - Y coordinate of the point being dragged
+	 */
+	private renderMagnifier(pointX: number, pointY: number) {
+		const cssWidth = parseInt(this.canvas.style.width);
+		const cssHeight = parseInt(this.canvas.style.height);
+
+		// Calculate magnifier position (smart positioning to avoid edges)
+		let magnifierX = pointX;
+		let magnifierY = pointY - this.magnifierOffset;
+
+		// Adjust if near top edge - position below instead
+		if (magnifierY - this.magnifierRadius < 0) {
+			magnifierY = pointY + this.magnifierOffset;
+		}
+
+		// Adjust if near left edge
+		if (magnifierX - this.magnifierRadius < 0) {
+			magnifierX = this.magnifierRadius + 10;
+		}
+
+		// Adjust if near right edge
+		if (magnifierX + this.magnifierRadius > cssWidth) {
+			magnifierX = cssWidth - this.magnifierRadius - 10;
+		}
+
+		// Adjust if near bottom edge
+		if (magnifierY + this.magnifierRadius > cssHeight) {
+			magnifierY = cssHeight - this.magnifierRadius - 10;
+		}
+
+		// Save context state
+		this.ctx.save();
+
+		// Create circular clipping path for magnifier
+		this.ctx.beginPath();
+		this.ctx.arc(magnifierX, magnifierY, this.magnifierRadius, 0, Math.PI * 2);
+		this.ctx.clip();
+
+		// Draw magnified content
+		// Calculate the source area to magnify (area around the dragged point)
+		const sourceSize = (this.magnifierRadius * 2) / this.magnifierZoom;
+		const sourceX = pointX - sourceSize / 2;
+		const sourceY = pointY - sourceSize / 2;
+
+		// Destination area (the magnifier circle)
+		const destX = magnifierX - this.magnifierRadius;
+		const destY = magnifierY - this.magnifierRadius;
+		const destSize = this.magnifierRadius * 2;
+
+		// Draw the magnified image content WITHOUT crop points
+		// We need to draw directly from the source image, not from the canvas
+		// Calculate the corresponding position on the original image
+		
+		// Convert canvas coordinates to image coordinates
+		const imgRelX = sourceX - this.imgX;
+		const imgRelY = sourceY - this.imgY;
+		const imgRelSize = sourceSize;
+
+		// Calculate the scale factor between displayed image and original image
+		const scaleX = this.img.width / this.imgWidth;
+		const scaleY = this.img.height / this.imgHeight;
+
+		// Convert to original image coordinates
+		const origX = imgRelX * scaleX;
+		const origY = imgRelY * scaleY;
+		const origSize = imgRelSize * scaleX;
+
+		// Use a temporary canvas to draw clean magnified content
+		const tempCanvas = document.createElement("canvas");
+		tempCanvas.width = destSize;
+		tempCanvas.height = destSize;
+		const tempCtx = tempCanvas.getContext("2d");
+
+		if (tempCtx) {
+			// Draw directly from the original image (no crop points)
+			tempCtx.drawImage(
+				this.img,
+				origX, origY,           // Source position on original image
+				origSize, origSize,     // Source size
+				0, 0,                   // Destination position
+				destSize, destSize      // Destination size (magnified)
+			);
+
+			// Draw the magnified content onto main canvas
+			this.ctx.drawImage(tempCanvas, destX, destY, destSize, destSize);
+		}
+
+		// Restore context (removes clipping)
+		this.ctx.restore();
+
+		// Draw magnifier border and styling
+		this.ctx.save();
+
+		// Outer shadow for depth
+		this.ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+		this.ctx.shadowBlur = 10;
+		this.ctx.shadowOffsetX = 0;
+		this.ctx.shadowOffsetY = 2;
+
+		// Draw white border
+		this.ctx.beginPath();
+		this.ctx.arc(magnifierX, magnifierY, this.magnifierRadius, 0, Math.PI * 2);
+		this.ctx.strokeStyle = "#ffffff";
+		this.ctx.lineWidth = 4;
+		this.ctx.stroke();
+
+		// Draw black outer ring
+		this.ctx.shadowColor = "transparent";
+		this.ctx.beginPath();
+		this.ctx.arc(magnifierX, magnifierY, this.magnifierRadius + 2, 0, Math.PI * 2);
+		this.ctx.strokeStyle = "#000000";
+		this.ctx.lineWidth = 2;
+		this.ctx.stroke();
+
+		// Draw crosshair at center to show exact position
+		this.ctx.strokeStyle = "#00ff00";
+		this.ctx.lineWidth = 1.5;
+		this.ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+		this.ctx.shadowBlur = 2;
+
+		// Horizontal line
+		this.ctx.beginPath();
+		this.ctx.moveTo(magnifierX - 12, magnifierY);
+		this.ctx.lineTo(magnifierX + 12, magnifierY);
+		this.ctx.stroke();
+
+		// Vertical line
+		this.ctx.beginPath();
+		this.ctx.moveTo(magnifierX, magnifierY - 12);
+		this.ctx.lineTo(magnifierX, magnifierY + 12);
+		this.ctx.stroke();
+
+		this.ctx.restore();
 	}
 
 	private removeCroppingPoints() {
@@ -740,37 +933,11 @@ export class ImagePreview {
 				// Reset rotation
 				this.toRotateDegree = 0;
 
-				// Recalculate and redraw with the new cropped image
-				const cssWidth = parseInt(this.canvas.style.width);
-				const cssHeight = parseInt(this.canvas.style.height);
+				// Resize canvas to match the cropped image dimensions
+				this.resizeToImage(this.img.width, this.img.height);
 
-				// Calculate scale to fit cropped image inside canvas
-				const scale = Math.min(
-					cssWidth / width,
-					cssHeight / height,
-				);
-
-				const scaledWidth = width * scale;
-				const scaledHeight = height * scale;
-
-				const x = (cssWidth - scaledWidth) / 2;
-				const y = (cssHeight - scaledHeight) / 2;
-
-				// Update stored dimensions
-				this.imgX = x;
-				this.imgY = y;
-				this.imgWidth = scaledWidth;
-				this.imgHeight = scaledHeight;
-
-				// Clear canvas and redraw with cropped image
-				// Account for DPR to properly clear the entire canvas
-				const dpr = window.devicePixelRatio || 1;
-				const actualWidth = Math.floor(cssWidth * dpr);
-				const actualHeight = Math.floor(cssHeight * dpr);
-				this.ctx.clearRect(0, 0, actualWidth, actualHeight);
-				this.ctx.fillStyle = "#000000";
-				this.ctx.fillRect(0, 0, actualWidth, actualHeight);
-				this.ctx.drawImage(this.img, x, y, scaledWidth, scaledHeight);
+				// Redraw the cropped image (fills entire canvas)
+				this.redrawImage();
 
 				// Hide crop points
 				this.cropPoints = [];
