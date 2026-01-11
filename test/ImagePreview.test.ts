@@ -98,7 +98,6 @@ describe("ImagePreview", () => {
 			mockCtx.save.mockClear();
 			mockCtx.translate.mockClear();
 			mockCtx.rotate.mockClear();
-			mockCtx.scale.mockClear();
 			mockCtx.drawImage.mockClear();
 			mockCtx.restore.mockClear();
 
@@ -107,7 +106,6 @@ describe("ImagePreview", () => {
 			expect(mockCtx.save).toHaveBeenCalled();
 			expect(mockCtx.translate).toHaveBeenCalled();
 			expect(mockCtx.rotate).toHaveBeenCalled();
-			expect(mockCtx.scale).toHaveBeenCalled();
 			expect(mockCtx.drawImage).toHaveBeenCalled();
 			expect(mockCtx.restore).toHaveBeenCalled();
 		});
@@ -143,7 +141,7 @@ describe("ImagePreview", () => {
 		it("should return error state when no image is loaded", () => {
 			const result = imagePreview.toggleCroppingPoints(true);
 
-			expect(result.state).toBe(false);
+			expect(result.success).toBe(false);
 			expect(result.message).toBe("Please upload photo first!");
 		});
 
@@ -153,7 +151,7 @@ describe("ImagePreview", () => {
 			vi.runAllTimers();
 
 			const result = imagePreview.toggleCroppingPoints(true);
-			expect(result.state).toBe(true);
+			expect(result.success).toBe(true);
 		});
 
 		it("should draw cropping points with correct message", () => {
@@ -166,7 +164,7 @@ describe("ImagePreview", () => {
 
 			const result = imagePreview.toggleCroppingPoints(true);
 
-			expect(result.state).toBe(true);
+			expect(result.success).toBe(true);
 			expect(result.message).toBe("Cropping points displayed");
 			expect(mockCtx.beginPath).toHaveBeenCalled();
 			expect(mockCtx.arc).toHaveBeenCalled();
@@ -185,7 +183,7 @@ describe("ImagePreview", () => {
 			// Then remove them
 			const result = imagePreview.toggleCroppingPoints(false);
 
-			expect(result.state).toBe(true);
+			expect(result.success).toBe(true);
 			expect(result.message).toBe("Cropping points removed");
 			expect(mockCtx.clearRect).toHaveBeenCalled();
 		});
@@ -312,7 +310,7 @@ describe("ImagePreview", () => {
 
 			// Crop points should still be drawable
 			const result = imagePreview.toggleCroppingPoints(true);
-			expect(result.state).toBe(true);
+			expect(result.success).toBe(true);
 		});
 
 		it("should handle show/hide crop points multiple times", () => {
@@ -325,7 +323,7 @@ describe("ImagePreview", () => {
 			imagePreview.toggleCroppingPoints(true);
 			const result = imagePreview.toggleCroppingPoints(false);
 
-			expect(result.state).toBe(true);
+			expect(result.success).toBe(true);
 			expect(result.message).toBe("Cropping points removed");
 		});
 

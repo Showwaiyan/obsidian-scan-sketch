@@ -42,7 +42,7 @@ beforeEach(() => {
 			return mockCtx as unknown as CanvasRenderingContext2D;
 		}
 		return null;
-	});
+	}) as any;
 
 	// Mock Image
 	global.Image = class Image {
