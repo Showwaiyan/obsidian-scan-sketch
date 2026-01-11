@@ -82,9 +82,9 @@ export class ScannerModal extends Modal {
 	}
 
 	private toggleCropMode() {
-		const { state, message } = this.canvas.toggleCroppingPoints(true);
+		const { success, message } = this.canvas.toggleCroppingPoints(true);
 		new Notice(message);
-		if (!state) {
+		if (!success) {
 			return;
 		}
 		this.buttonWrapper.hide();
