@@ -3,8 +3,11 @@ import { uploadImageToCanvas } from "Services/ImageUpload";
 import { ImagePreview } from "UI/Components/ImagePreview";
 import { FilterControls } from "UI/Components/FilterControls";
 import { BackgroundRemovalControls } from "UI/Components/BackgroundRemovalControls";
+import { ExportControls } from "UI/Components/ExportControls";
+import type HandWrittenPlugin from "../../main";
 
 export class ScannerModal extends Modal {
+	private plugin: HandWrittenPlugin;
 	private container: HTMLElement;
 	private buttonWrapper: HTMLElement;
 	private filterPanelWrapper: HTMLElement;
@@ -17,14 +20,17 @@ export class ScannerModal extends Modal {
 	private btnCrop: ButtonComponent;
 	private btnRemoveBG: ButtonComponent;
 	private btnEdit: ButtonComponent;
+	private btnExport: ButtonComponent;
 	private btnConfirm: ButtonComponent;
 	private btnCancel: ButtonComponent;
 	private processingNotice: Notice | null;
 	private filterControls: FilterControls;
 	private bgRemovalControls: BackgroundRemovalControls;
+	private exportControls: ExportControls;
 
-	constructor(app: App) {
+	constructor(app: App, plugin: HandWrittenPlugin) {
 		super(app);
+		this.plugin = plugin;
 		this.setTitle("Scan Your Note");
 		this.modalEl.addClass("scanner-modal");
 
@@ -110,6 +116,15 @@ export class ScannerModal extends Modal {
 			() => this.canvas.isImageLoaded(),
 		);
 		this.btnEdit = this.filterControls.createEditButton(this.buttonWrapper);
+
+		// Initialize export controls
+		this.exportControls = new ExportControls(
+			this.app,
+			() => this.canvas.getExportCanvas(),
+			this.plugin.settings.exportDefaultFolder,
+			() => this.canvas.isImageLoaded(),
+		);
+		this.btnExport = this.exportControls.createExportButton(this.buttonWrapper);
 
 		// Confirmation buttons
 		this.btnConfirm = new ButtonComponent(this.confirmButtonWrapper)
@@ -285,6 +300,7 @@ export class ScannerModal extends Modal {
 		this.btnCrop.setDisabled(!enabled);
 		this.btnRemoveBG.setDisabled(!enabled);
 		this.btnEdit.setDisabled(!enabled);
+		this.btnExport.setDisabled(!enabled);
 
 		// Confirmation buttons
 		this.btnConfirm.setDisabled(!enabled);

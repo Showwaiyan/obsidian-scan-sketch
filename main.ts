@@ -13,10 +13,12 @@ import { ScannerModal } from "./UI/Modals/scannerModal";
 
 interface MyPluginSettings {
 	mySetting: string;
+	exportDefaultFolder: string;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: "default",
+	exportDefaultFolder: "Scanned",
 };
 
 export default class HandWrittenPlugin extends Plugin {
@@ -31,7 +33,7 @@ export default class HandWrittenPlugin extends Plugin {
 			"Scanner",
 			(_evt: MouseEvent) => {
 				// Called when the user clicks the icon.
-				new ScannerModal(this.app).open();
+				new ScannerModal(this.app, this).open();
 			},
 		);
 		// Perform additional things with the ribbon
@@ -46,7 +48,7 @@ export default class HandWrittenPlugin extends Plugin {
 			id: "scan-sketch",
 			name: "Scan a sketch",
 			callback: () => {
-				new ScannerModal(this.app).open();
+				new ScannerModal(this.app, this).open();
 			},
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
@@ -147,6 +149,19 @@ class SampleSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.mySetting)
 					.onChange(async (value) => {
 						this.plugin.settings.mySetting = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Default Export Folder")
+			.setDesc("Folder path where scanned images will be saved (e.g., 'Scanned' or 'Notes/Scans')")
+			.addText((text) =>
+				text
+					.setPlaceholder("Scanned")
+					.setValue(this.plugin.settings.exportDefaultFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.exportDefaultFolder = value || "Scanned";
 						await this.plugin.saveSettings();
 					}),
 			);

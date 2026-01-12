@@ -32,6 +32,37 @@ export function fillCanvas(
 }
 
 /**
+ * Fill canvas with a checkerboard pattern (for transparent backgrounds)
+ * @param ctx - Canvas rendering context
+ * @param width - Canvas width (CSS pixels)
+ * @param height - Canvas height (CSS pixels)
+ * @param squareSize - Size of each checker square (default: 10)
+ * @param color1 - First color (default: light gray)
+ * @param color2 - Second color (default: white)
+ */
+export function fillCanvasWithCheckerboard(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+	squareSize: number = 10,
+	color1: string = "#e0e0e0",
+	color2: string = "#ffffff",
+): void {
+	// Clear canvas first
+	ctx.clearRect(0, 0, width, height);
+	
+	// Draw checkerboard pattern
+	for (let y = 0; y < height; y += squareSize) {
+		for (let x = 0; x < width; x += squareSize) {
+			// Alternate colors in a checkerboard pattern
+			const isEvenSquare = (Math.floor(x / squareSize) + Math.floor(y / squareSize)) % 2 === 0;
+			ctx.fillStyle = isEvenSquare ? color1 : color2;
+			ctx.fillRect(x, y, squareSize, squareSize);
+		}
+	}
+}
+
+/**
  * Render a placeholder with icon and text
  * @param ctx - Canvas rendering context
  * @param width - Canvas width (CSS pixels)

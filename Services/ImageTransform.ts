@@ -117,22 +117,23 @@ export function performPerspectiveCrop(
 }
 
 /**
- * Create a new image from image data
+ * Create an HTMLImageElement from ImageData
+ * Handles DPR correctly by using ImageData's actual dimensions
  * @param imageData - Image data to convert
- * @param width - Image width
- * @param height - Image height
+ * @param width - Desired output width (optional, uses imageData.width if not provided)
+ * @param height - Desired output height (optional, uses imageData.height if not provided)
  * @returns Promise that resolves to the created image
  */
 export function createImageFromImageData(
 	imageData: ImageData,
-	width: number,
-	height: number,
+	width?: number,
+	height?: number,
 ): Promise<HTMLImageElement> {
 	return new Promise((resolve, reject) => {
-		// Create temporary canvas for the cropped output
+		// Create temporary canvas matching ImageData dimensions (handles DPR correctly)
 		const tempCanvas = document.createElement("canvas");
-		tempCanvas.width = width;
-		tempCanvas.height = height;
+		tempCanvas.width = width ?? imageData.width;
+		tempCanvas.height = height ?? imageData.height;
 		const tempCtx = tempCanvas.getContext("2d");
 
 		if (!tempCtx) {
@@ -171,10 +172,8 @@ export function drawImageWithRotation(
 	canvasHeight: number,
 	rotation: number = 0,
 ): void {
-	// Clear canvas and fill with black background
+	// Clear canvas (transparent background for proper PNG export)
 	ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-	ctx.fillStyle = "#000000";
-	ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
 	// Normalize rotation
 	const normalizedRotation = ((rotation % 360) + 360) % 360;

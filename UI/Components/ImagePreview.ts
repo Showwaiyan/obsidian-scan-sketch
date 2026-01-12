@@ -14,6 +14,7 @@ import {
 import {
 	clearCanvas,
 	fillCanvas,
+	fillCanvasWithCheckerboard,
 	renderPlaceholder,
 	renderCropPoints,
 	renderMagnifier,
@@ -370,9 +371,8 @@ export class ImagePreview {
 			const cssWidth = parseInt(this.canvas.style.width);
 			const cssHeight = parseInt(this.canvas.style.height);
 
-			// Clear canvas with black background
-			clearCanvas(this.ctx, cssWidth, cssHeight);
-			fillCanvas(this.ctx, cssWidth, cssHeight, "#000000");
+			// Clear canvas and draw checkerboard pattern for transparency visibility
+			fillCanvasWithCheckerboard(this.ctx, cssWidth, cssHeight);
 
 			// Image fills entire canvas (no letterboxing, maximum resolution)
 			this.imgX = 0;
@@ -392,6 +392,9 @@ export class ImagePreview {
 	private redrawImage() {
 		const cssWidth = parseInt(this.canvas.style.width);
 		const cssHeight = parseInt(this.canvas.style.height);
+
+		// Draw checkerboard pattern first for transparency visibility
+		fillCanvasWithCheckerboard(this.ctx, cssWidth, cssHeight);
 
 		// Draw the rotated image
 		drawImageWithRotation(
@@ -812,6 +815,12 @@ export class ImagePreview {
 			return;
 		}
 
+		const cssWidth = parseInt(this.canvas.style.width);
+		const cssHeight = parseInt(this.canvas.style.height);
+
+		// Draw checkerboard pattern first for transparency visibility
+		fillCanvasWithCheckerboard(this.ctx, cssWidth, cssHeight);
+
 		const preview = removeBackground(
 			this.originalImageDataBeforeRemoval,
 			this.sampledBackgroundColor,
@@ -847,9 +856,8 @@ export class ImagePreview {
 			);
 
 			// Convert ImageData back to Image for future operations
-			const cssWidth = parseInt(this.canvas.style.width);
-			const cssHeight = parseInt(this.canvas.style.height);
-			this.img = await createImageFromImageData(result, cssWidth, cssHeight);
+			// No need to pass dimensions - function will use ImageData's actual dimensions
+			this.img = await createImageFromImageData(result);
 
 			// Redraw with new image
 			this.redrawImage();
@@ -885,18 +893,66 @@ export class ImagePreview {
 	 */
 	private restoreOriginalBeforeRemoval(): void {
 		if (this.originalImageDataBeforeRemoval) {
+			const cssWidth = parseInt(this.canvas.style.width);
+			const cssHeight = parseInt(this.canvas.style.height);
+			
+			// Draw checkerboard pattern first for transparency visibility
+			fillCanvasWithCheckerboard(this.ctx, cssWidth, cssHeight);
+			
 			this.ctx.putImageData(this.originalImageDataBeforeRemoval, 0, 0);
 		}
 	}
 
 	/**
-	 * Get current image data from canvas
+	 * Get current image data from canvas (clean, without checkerboard)
+	 * Creates a temporary canvas with only the image content for processing
 	 */
 	private getCurrentImageData(): ImageData {
 		const cssWidth = parseInt(this.canvas.style.width);
 		const cssHeight = parseInt(this.canvas.style.height);
 		const dpr = window.devicePixelRatio || 1;
-		return this.ctx.getImageData(0, 0, cssWidth * dpr, cssHeight * dpr);
+		const actualWidth = Math.floor(cssWidth * dpr);
+		const actualHeight = Math.floor(cssHeight * dpr);
+
+		// Create temporary canvas for clean image data (no checkerboard)
+		const tempCanvas = document.createElement("canvas");
+		tempCanvas.width = actualWidth;
+		tempCanvas.height = actualHeight;
+		const tempCtx = tempCanvas.getContext("2d");
+
+		if (!tempCtx) {
+			// Fallback to current canvas if temp context fails
+			return this.ctx.getImageData(0, 0, actualWidth, actualHeight);
+		}
+
+		// Set transform to match display canvas
+		tempCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+		// Draw only the image without checkerboard background
+		if (this.img) {
+			drawImageWithRotation(
+				tempCtx,
+				this.img,
+				cssWidth,
+				cssHeight,
+				this.toRotateDegree,
+			);
+
+			// Apply filters if any are active
+			const hasFilters = this.filterConfig.brightness !== 0 
+				|| this.filterConfig.contrast !== 0 
+				|| this.filterConfig.saturation !== 0 
+				|| this.filterConfig.blackAndWhite;
+
+			if (hasFilters) {
+				const imageData = tempCtx.getImageData(0, 0, actualWidth, actualHeight);
+				applyFilters(imageData, this.filterConfig);
+				tempCtx.putImageData(imageData, 0, 0);
+			}
+		}
+
+		// Get the clean image data
+		return tempCtx.getImageData(0, 0, actualWidth, actualHeight);
 	}
 
 	/**
@@ -904,5 +960,64 @@ export class ImagePreview {
 	 */
 	public getSampledBackgroundColor(): RGB | null {
 		return this.sampledBackgroundColor;
+	}
+
+	/**
+	 * Get canvas element for export
+	 * @returns Canvas element
+	 */
+	public getCanvas(): HTMLCanvasElement {
+		return this.canvas;
+	}
+
+	/**
+	 * Get a clean export canvas without checkerboard background
+	 * Creates a temporary canvas with only the image content
+	 * @returns Canvas element ready for export with transparent background
+	 */
+	public getExportCanvas(): HTMLCanvasElement {
+		const cssWidth = parseInt(this.canvas.style.width);
+		const cssHeight = parseInt(this.canvas.style.height);
+		const dpr = window.devicePixelRatio || 1;
+
+		// Create temporary canvas for clean export
+		const exportCanvas = document.createElement("canvas");
+		exportCanvas.width = this.canvas.width;
+		exportCanvas.height = this.canvas.height;
+		const exportCtx = exportCanvas.getContext("2d");
+
+		if (!exportCtx) {
+			throw new Error("Failed to create export canvas context");
+		}
+
+		// Set transform to match display canvas
+		exportCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+		// Draw the image without checkerboard background
+		if (this.img) {
+			drawImageWithRotation(
+				exportCtx,
+				this.img,
+				cssWidth,
+				cssHeight,
+				this.toRotateDegree,
+			);
+
+			// Apply filters if any are active
+			const hasFilters = this.filterConfig.brightness !== 0 
+				|| this.filterConfig.contrast !== 0 
+				|| this.filterConfig.saturation !== 0 
+				|| this.filterConfig.blackAndWhite;
+
+			if (hasFilters) {
+				const actualWidth = Math.floor(cssWidth * dpr);
+				const actualHeight = Math.floor(cssHeight * dpr);
+				const imageData = exportCtx.getImageData(0, 0, actualWidth, actualHeight);
+				applyFilters(imageData, this.filterConfig);
+				exportCtx.putImageData(imageData, 0, 0);
+			}
+		}
+
+		return exportCanvas;
 	}
 }

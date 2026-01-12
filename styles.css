@@ -518,3 +518,140 @@ If your plugin does not need CSS, delete this file.
 		font-size: 14px;
 	}
 }
+
+/* Export Modal */
+.export-modal {
+	width: 450px;
+	max-width: 90vw;
+}
+
+.export-modal .modal-content {
+	padding: 20px;
+}
+
+/* Format Selector */
+.export-format-section {
+	margin: 15px 0;
+}
+
+.export-format-section h4 {
+	margin-bottom: 10px;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.export-format-options {
+	display: flex;
+	gap: 20px;
+}
+
+.export-format-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.export-format-option input[type="radio"] {
+	cursor: pointer;
+	margin: 0;
+}
+
+.export-format-option label {
+	cursor: pointer;
+	margin: 0;
+}
+
+/* Filename Input */
+.export-filename-section {
+	margin: 15px 0;
+}
+
+.export-filename-section h4 {
+	margin-bottom: 10px;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.export-filename-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.export-filename-input {
+	flex: 1;
+}
+
+.export-filename-extension {
+	color: var(--text-normal);
+	font-weight: 600;
+	font-size: 1em;
+	min-width: 40px;
+}
+
+/* Folder Display */
+.export-folder-section {
+	margin: 15px 0;
+}
+
+.export-folder-section h4 {
+	margin-bottom: 10px;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.export-folder-path {
+	padding: 10px 12px;
+	background: var(--background-secondary);
+	border-radius: 4px;
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.export-folder-note {
+	margin-top: 8px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* Action Buttons */
+.export-buttons {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 20px;
+	padding-top: 15px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.export-buttons button {
+	min-width: 80px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+	.export-modal {
+		width: 95vw;
+	}
+	
+	.export-format-options {
+		flex-direction: column;
+		gap: 12px;
+	}
+	
+	.export-buttons {
+		flex-direction: column-reverse;
+	}
+	
+	.export-buttons button {
+		width: 100%;
+	}
+}
