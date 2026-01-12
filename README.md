@@ -1,96 +1,283 @@
-> This is template readme from default repo, README for current repo is not updated yet
+# Obsidian Handwritten Scanner
 
-# Obsidian Sample Plugin
+A powerful Obsidian plugin for scanning, processing, and enhancing handwritten notes and documents. Transform photos of your handwritten notes into clean, processed images with automatic perspective correction, background removal, and advanced filtering.
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+## Features
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+### 📸 Image Upload & Processing
+- **Multiple Input Methods**: Upload from file picker or capture directly from camera
+- **Smart Perspective Correction**: Automatically detect and correct document corners with interactive crop points
+- **Rotation Controls**: Rotate images in 90-degree increments for proper orientation
+- **HiDPI Support**: Full support for high-resolution displays (Retina, 4K, etc.)
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### 🎨 Advanced Image Enhancement
+- **Background Removal**: 
+  - Click-to-sample background color detection
+  - Adjustable tolerance slider (0-50)
+  - Real-time preview with checkerboard pattern for transparency
+  - Export with true transparent background (PNG)
+  
+- **Image Filters**:
+  - Brightness adjustment (-100 to +100)
+  - Contrast enhancement (-100 to +100)
+  - Saturation control (-100 to +100)
+  - Black & White conversion
+  - Real-time preview with 200ms debouncing
 
-## First time developing plugins?
+### 💾 Export Options
+- **Multiple Formats**:
+  - PNG (with transparency support)
+  - SVG (embedded PNG wrapper)
+- **Flexible Storage**:
+  - Configurable default export folder
+  - Automatic timestamp-based filename generation
+  - Custom filename support with validation
+  - Direct save to Obsidian vault
 
-Quick starting guide for new plugin devs:
+### 🎯 User Experience
+- **Visual Feedback**:
+  - Magnifying loupe when dragging crop points
+  - Real-time filter preview
+  - Clear status notifications
+  
+- **Touch & Mouse Support**:
+  - Responsive controls for both desktop and mobile
+  - Larger touch targets (30px) for mobile devices
+  - Drag-and-drop crop point adjustment
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Installation
 
-## Releasing new releases
+### From Obsidian Community Plugins (Comming Soon)
+1. Open Obsidian Settings
+2. Navigate to Community Plugins
+3. Search for "Handwritten Scanner"
+4. Click Install
+5. Enable the plugin
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### Manual Installation
+1. Download the latest release from GitHub
+2. Extract files to `VaultFolder/.obsidian/plugins/obsidian-scan-sketch/`
+3. Reload Obsidian
+4. Enable plugin in Settings → Community Plugins
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Usage
 
-## Adding your plugin to the community plugin list
+### Basic Workflow
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+1. **Open Scanner Modal**
+   - Click the scan icon in the ribbon (left sidebar)
+   - Or use Command Palette: "Open Scanner"
 
-## How to use
+2. **Upload Image**
+   - Click "Upload" to select from files
+   - Or click "Camera" to capture directly (if available)
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+3. **Adjust & Process**
+   - **Rotate**: Click rotation buttons to orient correctly
+   - **Crop**: Click "Crop" to show corner points, drag to adjust, click "Apply"
+   - **Filters**: Adjust sliders for brightness, contrast, saturation
+   - **Background Removal**: Click to sample background color, adjust tolerance
 
-## Manually installing the plugin
+4. **Export**
+   - Click "Export" button (download icon)
+   - Choose format (PNG/SVG)
+   - Enter filename or use auto-generated timestamp
+   - Click "Export" to save to vault
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Background Removal
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+1. Click the background removal icon
+2. Click on any background area to sample the color
+3. Adjust tolerance slider to fine-tune selection
+4. Preview shows transparent areas with checkerboard pattern
+5. Click "Apply" to confirm or "Cancel" to revert
+6. Export as PNG to preserve transparency
 
-## Funding URL
+### Perspective Crop
 
-You can include funding URLs where people who use your plugin can financially support it.
+1. Click "Crop" button to show corner points
+2. Drag the four blue corner points to match document edges
+3. Click "Apply" to transform the quadrilateral into a rectangle
+4. The image automatically adjusts to the corrected perspective
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Settings
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+Access plugin settings via Settings → Obsidian Handwritten Scanner:
+
+- **Export Default Folder**: Set the default folder for saving scanned images (default: root)
+
+## Technical Architecture
+
+### Project Structure
+
+```
+obsidian-handwritten-scanner/
+├── main.ts                 # Plugin entry point
+├── Services/              # Business logic & utilities
+│   ├── CanvasRenderer.ts       # Canvas drawing utilities
+│   ├── CropPointManager.ts     # Crop point logic
+│   ├── ImageBackgroundRemoval.ts  # Background removal algorithms
+│   ├── ImageExport.ts          # PNG/SVG export
+│   ├── ImageFilter.ts          # Image filtering
+│   ├── ImageTransform.ts       # Rotation & perspective transforms
+│   ├── ImageUpload.ts          # File upload handling
+│   ├── Interaction.ts          # User interaction utilities
+│   ├── VaultExport.ts          # Obsidian vault operations
+│   └── types.ts                # TypeScript type definitions
+├── UI/                    # User interface components
+│   ├── Components/
+│   │   ├── BackgroundRemovalControls.ts
+│   │   ├── ExportControls.ts
+│   │   ├── FilterControls.ts
+│   │   └── ImagePreview.ts
+│   └── Modals/
+│       ├── ExportModal.ts
+│       └── scannerModal.ts
+├── test/                  # Vitest test suite
+└── styles.css            # Plugin styles
 ```
 
-If you have multiple URLs, you can also do:
+### Key Technologies
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+- **TypeScript**: Type-safe development with strict null checks
+- **Obsidian API**: Native integration with Obsidian
+- **Canvas API**: Image rendering and manipulation
+- **perspective-transform**: Perspective correction library
+- **Vitest**: Fast unit testing with happy-dom
+- **esbuild**: Lightning-fast bundling
+
+### Code Quality
+
+- **Testing**: 125+ unit tests with >90% coverage
+- **Linting**: ESLint with TypeScript support
+- **Formatting**: EditorConfig (tabs, double quotes, LF)
+- **Type Safety**: Strict TypeScript configuration
+- **Documentation**: JSDoc comments for public APIs
+
+## Development
+
+### Prerequisites
+- Node.js v16 or higher
+- npm or yarn
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/obsidian-handwritten-scanner.git
+
+# Install dependencies
+npm install
+
+# Start development mode (watch)
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+
+# Build for production
+npm run build
 ```
 
-## API Documentation
+### Commands
 
-See https://github.com/obsidianmd/obsidian-api
+- `npm run dev` - Watch mode compilation with esbuild
+- `npm run build` - Production build with TypeScript checking
+- `npm test` - Run all tests with Vitest
+- `npm run test:ui` - Interactive test UI dashboard
+- `npm run test:coverage` - Generate coverage report
+- `npm run version` - Bump version and update manifest/versions.json
+
+### Testing
+
+Run specific tests:
+```bash
+# Single test file
+npx vitest test/ImagePreview.test.ts
+
+# Single test case
+npx vitest -t "should initialize"
+
+# Watch mode
+npx vitest --watch
+```
+
+### Code Style
+
+- **Indentation**: Tabs (width 4)
+- **Quotes**: Double quotes
+- **Semicolons**: Required
+- **Imports**: Obsidian imports first, then blank line, then local imports with path aliases
+- **Path Aliases**: Use `Services/` and `UI/` instead of relative paths
+
+Example:
+```typescript
+import { App, Modal, Notice } from "obsidian";
+
+import { uploadImageToCanvas } from "Services/ImageUpload";
+import { ImagePreview } from "UI/Components/ImagePreview";
+```
+
+## Changelog
+
+### Version 1.0.0 (Current)
+
+**Features:**
+- Initial release
+- Image upload and camera capture
+- Perspective correction with interactive crop points
+- Image rotation (90° increments)
+- Advanced filters (brightness, contrast, saturation, B&W)
+- Background removal with tolerance adjustment
+- PNG/SVG export with transparency support
+- Checkerboard pattern for transparent areas
+- Configurable export folder
+- Touch and mouse support
+- HiDPI display support
+
+**Bug Fixes:**
+- Fixed transparent background export (removed black background fill)
+- Fixed background removal cropping issue (DPR dimension mismatch)
+- Fixed checkerboard contamination in background removal
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Follow code style**: Use tabs, double quotes, proper imports
+4. **Write tests**: Add tests for new features
+5. **Run tests**: `npm test` (all tests must pass)
+6. **Build**: `npm run build` (must build without errors)
+7. **Commit**: Use clear, descriptive commit messages
+8. **Push**: `git push origin feature/amazing-feature`
+9. **Open a Pull Request**
+
+## License
+
+This project is licensed under the OBSD License - see the LICENSE file for details.
+
+## Support
+
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/yourusername/obsidian-handwritten-scanner/issues)
+- **Discussions**: Ask questions in [GitHub Discussions](https://github.com/yourusername/obsidian-handwritten-scanner/discussions)
+- **Documentation**: See [Obsidian Plugin Guidelines](https://docs.obsidian.md/Plugins)
+
+## Acknowledgments
+
+- Built with [Obsidian API](https://github.com/obsidianmd/obsidian-api)
+- Uses [perspective-transform](https://github.com/jlouthan/perspective-transform) for perspective correction
+- CSS styling for notebook background color schemes adapted from [Obsidian-Notebook-Themes](https://github.com/CyanVoxel/Obsidian-Notebook-Themes) by [@CyanVoxel](https://github.com/CyanVoxel) (v2.2.3)
+  - Includes recolor-images functionality and page background color schemes
+  - Color filter generation tool: [CSS Color Filter Generator](https://angel-rs.github.io/css-color-filter-generator)
+- Inspired by document scanning apps and the Obsidian community
+
+---
+
+**Made with ❤️ for the Obsidian community**
