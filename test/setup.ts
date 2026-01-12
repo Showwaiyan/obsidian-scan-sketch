@@ -77,4 +77,37 @@ beforeEach(() => {
 		cb(0);
 		return 0;
 	});
+
+	// Mock ImageData for filter tests
+	global.ImageData = class ImageData {
+		data: Uint8ClampedArray;
+		width: number;
+		height: number;
+
+		constructor(width: number, height: number);
+		constructor(data: Uint8ClampedArray, width: number, height?: number);
+		constructor(
+			dataOrWidth: Uint8ClampedArray | number,
+			widthOrHeight: number,
+			height?: number,
+		) {
+			if (typeof dataOrWidth === "number") {
+				// new ImageData(width, height)
+				this.width = dataOrWidth;
+				this.height = widthOrHeight;
+				this.data = new Uint8ClampedArray(this.width * this.height * 4);
+			} else {
+				// new ImageData(data, width, height?)
+				this.data = dataOrWidth;
+				this.width = widthOrHeight;
+				this.height = height || Math.floor(dataOrWidth.length / (this.width * 4));
+			}
+		}
+	} as any;
+
+	// Mock getImageData and putImageData
+	mockCtx.getImageData = vi.fn((x: number, y: number, width: number, height: number) => {
+		return new ImageData(width, height);
+	});
+	mockCtx.putImageData = vi.fn();
 });
