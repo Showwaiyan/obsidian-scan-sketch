@@ -596,6 +596,14 @@ export class ImagePreview {
 			// Resize canvas to match the cropped image dimensions
 			this.resizeToImage(this.img.width, this.img.height);
 
+			// Update image dimensions to match new canvas size
+			const cssWidth = parseInt(this.canvas.style.width);
+			const cssHeight = parseInt(this.canvas.style.height);
+			this.imgX = 0;
+			this.imgY = 0;
+			this.imgWidth = cssWidth;
+			this.imgHeight = cssHeight;
+
 			// Redraw the cropped image
 			this.redrawImage();
 
