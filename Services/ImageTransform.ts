@@ -172,9 +172,9 @@ export function drawImageWithRotation(
 	canvasHeight: number,
 	rotation: number = 0,
 ): void {
-	// Clear canvas (transparent background for proper PNG export)
-	ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
+	// Note: Canvas should already have background (e.g., checkerboard) drawn by caller
+	// Do not clear here to preserve the background pattern for transparency visibility
+	
 	// Normalize rotation
 	const normalizedRotation = ((rotation % 360) + 360) % 360;
 	
