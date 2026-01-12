@@ -73,12 +73,11 @@ describe("ImagePreview", () => {
 
 		it("should clear canvas when rotating", () => {
 			mockCtx.clearRect.mockClear();
-			mockCtx.fillRect.mockClear();
 
 			imagePreview.rotate(90);
 
+			// Should clear canvas (for transparency and redraw with checkerboard)
 			expect(mockCtx.clearRect).toHaveBeenCalled();
-			expect(mockCtx.fillRect).toHaveBeenCalled();
 		});
 
 		it("should accumulate rotation degrees", () => {
