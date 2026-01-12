@@ -24,6 +24,11 @@ import {
 	cloneImageData,
 } from "Services/ImageFilter";
 import {
+	sampleColorAtPoint,
+	removeBackground,
+	type RGB,
+} from "Services/ImageBackgroundRemoval";
+import {
 	CropPoint,
 	CropPointStyle,
 	PlaceholderConfig,
@@ -57,6 +62,14 @@ export class ImagePreview {
 	private filterConfig: ImageFilterConfig;
 	private originalImageData: ImageData | null;
 	private filterDebounceTimer: number | null;
+
+	// for background removal
+	private backgroundRemovalMode: boolean;
+	private sampledBackgroundColor: RGB | null;
+	private bgRemovalTolerance: number;
+	private bgRemovalPreviewEnabled: boolean;
+	private originalImageDataBeforeRemoval: ImageData | null;
+	private onColorSampled: ((color: RGB) => void) | null;
 
 	// Configuration
 	private magnifierConfig: MagnifierConfig;
@@ -111,6 +124,12 @@ export class ImagePreview {
 		this.filterConfig = { ...DEFAULT_FILTER_CONFIG };
 		this.originalImageData = null;
 		this.filterDebounceTimer = null;
+		this.backgroundRemovalMode = false;
+		this.sampledBackgroundColor = null;
+		this.bgRemovalTolerance = 15;
+		this.bgRemovalPreviewEnabled = true;
+		this.originalImageDataBeforeRemoval = null;
+		this.onColorSampled = null;
 
 		// Setup input event handlers (mouse and touch)
 		this.setupInputEvents();
@@ -677,5 +696,213 @@ export class ImagePreview {
 	 */
 	public isImageLoaded(): boolean {
 		return this.img != null;
+	}
+
+	// ========== Background Removal Methods ==========
+
+	/**
+	 * Enter background removal mode
+	 * Saves current state and sets up click listener for color sampling
+	 */
+	public enterBackgroundRemovalMode(onColorSampled?: (color: RGB) => void): OperationResult {
+		if (!this.isImageLoaded()) {
+			return { success: false, message: "Please upload photo first!" };
+		}
+
+		// Save current state for cancellation
+		this.originalImageDataBeforeRemoval = this.getCurrentImageData();
+		this.backgroundRemovalMode = true;
+		this.sampledBackgroundColor = null;
+		this.onColorSampled = onColorSampled || null;
+
+		// Change cursor to crosshair
+		this.canvas.style.cursor = "crosshair";
+
+		// Set up click listener for sampling
+		this.canvas.addEventListener("click", this.onBackgroundSampleClick.bind(this));
+
+		return { success: true, message: "Click on background to sample" };
+	}
+
+	/**
+	 * Exit background removal mode
+	 */
+	public exitBackgroundRemovalMode(): void {
+		this.backgroundRemovalMode = false;
+		
+		// Restore default cursor
+		this.canvas.style.cursor = "default";
+		
+		// Remove click listener
+		this.canvas.removeEventListener("click", this.onBackgroundSampleClick.bind(this));
+	}
+
+	/**
+	 * Handle click event for sampling background color
+	 */
+	private onBackgroundSampleClick(event: MouseEvent): void {
+		const rect = this.canvas.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+
+		this.sampleBackgroundAtPoint(x, y);
+	}
+
+	/**
+	 * Sample background color at specific point
+	 * @param x - X coordinate in CSS pixels
+	 * @param y - Y coordinate in CSS pixels
+	 */
+	public sampleBackgroundAtPoint(x: number, y: number): RGB | null {
+		const imageData = this.getCurrentImageData();
+		
+		// Convert CSS pixels to image pixels (account for DPR)
+		const dpr = window.devicePixelRatio || 1;
+		const imageX = Math.floor(x * dpr);
+		const imageY = Math.floor(y * dpr);
+		
+		const color = sampleColorAtPoint(imageData, imageX, imageY);
+
+		if (color) {
+			this.sampledBackgroundColor = color;
+
+			// Notify callback if set
+			if (this.onColorSampled) {
+				this.onColorSampled(color);
+			}
+
+			// Trigger preview if enabled
+			if (this.bgRemovalPreviewEnabled) {
+				this.previewBackgroundRemoval();
+			}
+		}
+
+		return color;
+	}
+
+	/**
+	 * Update tolerance and refresh preview
+	 */
+	public updateBgRemovalTolerance(tolerance: number): void {
+		this.bgRemovalTolerance = tolerance;
+
+		if (this.bgRemovalPreviewEnabled && this.sampledBackgroundColor) {
+			this.previewBackgroundRemoval();
+		}
+	}
+
+	/**
+	 * Toggle preview on/off
+	 */
+	public toggleBgRemovalPreview(enabled: boolean): void {
+		this.bgRemovalPreviewEnabled = enabled;
+
+		if (enabled && this.sampledBackgroundColor) {
+			this.previewBackgroundRemoval();
+		} else {
+			this.restoreOriginalBeforeRemoval();
+		}
+	}
+
+	/**
+	 * Show preview of background removal
+	 */
+	private previewBackgroundRemoval(): void {
+		if (!this.sampledBackgroundColor || !this.originalImageDataBeforeRemoval) {
+			return;
+		}
+
+		const preview = removeBackground(
+			this.originalImageDataBeforeRemoval,
+			this.sampledBackgroundColor,
+			this.bgRemovalTolerance,
+		);
+
+		this.ctx.putImageData(preview, 0, 0);
+	}
+
+	/**
+	 * Apply background removal permanently
+	 */
+	public async applyBackgroundRemoval(): Promise<OperationResult> {
+		if (!this.sampledBackgroundColor) {
+			return {
+				success: false,
+				message: "Please sample a background color first",
+			};
+		}
+
+		if (!this.originalImageDataBeforeRemoval) {
+			return {
+				success: false,
+				message: "No image data available",
+			};
+		}
+
+		try {
+			const result = removeBackground(
+				this.originalImageDataBeforeRemoval,
+				this.sampledBackgroundColor,
+				this.bgRemovalTolerance,
+			);
+
+			// Convert ImageData back to Image for future operations
+			const cssWidth = parseInt(this.canvas.style.width);
+			const cssHeight = parseInt(this.canvas.style.height);
+			this.img = await createImageFromImageData(result, cssWidth, cssHeight);
+
+			// Redraw with new image
+			this.redrawImage();
+
+			// Cleanup
+			this.originalImageDataBeforeRemoval = null;
+			this.exitBackgroundRemovalMode();
+
+			return {
+				success: true,
+				message: "Background removed successfully",
+			};
+		} catch (error) {
+			return {
+				success: false,
+				message: `Failed to remove background: ${error.message}`,
+			};
+		}
+	}
+
+	/**
+	 * Cancel background removal
+	 */
+	public cancelBackgroundRemoval(): void {
+		this.restoreOriginalBeforeRemoval();
+		this.originalImageDataBeforeRemoval = null;
+		this.sampledBackgroundColor = null;
+		this.exitBackgroundRemovalMode();
+	}
+
+	/**
+	 * Restore original image before removal
+	 */
+	private restoreOriginalBeforeRemoval(): void {
+		if (this.originalImageDataBeforeRemoval) {
+			this.ctx.putImageData(this.originalImageDataBeforeRemoval, 0, 0);
+		}
+	}
+
+	/**
+	 * Get current image data from canvas
+	 */
+	private getCurrentImageData(): ImageData {
+		const cssWidth = parseInt(this.canvas.style.width);
+		const cssHeight = parseInt(this.canvas.style.height);
+		const dpr = window.devicePixelRatio || 1;
+		return this.ctx.getImageData(0, 0, cssWidth * dpr, cssHeight * dpr);
+	}
+
+	/**
+	 * Get sampled background color (for UI display)
+	 */
+	public getSampledBackgroundColor(): RGB | null {
+		return this.sampledBackgroundColor;
 	}
 }

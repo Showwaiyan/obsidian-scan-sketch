@@ -2,22 +2,26 @@ import { App, ButtonComponent, Modal, Notice } from "obsidian";
 import { uploadImageToCanvas } from "Services/ImageUpload";
 import { ImagePreview } from "UI/Components/ImagePreview";
 import { FilterControls } from "UI/Components/FilterControls";
+import { BackgroundRemovalControls } from "UI/Components/BackgroundRemovalControls";
 
 export class ScannerModal extends Modal {
 	private container: HTMLElement;
 	private buttonWrapper: HTMLElement;
 	private filterPanelWrapper: HTMLElement;
+	private bgRemovalPanelWrapper: HTMLElement;
 	private confirmButtonWrapper: HTMLElement;
 	private canvas: ImagePreview;
 	private btnPhotoUpload: ButtonComponent;
 	private btnPhotoRotateCW: ButtonComponent;
 	private btnPhotoRotateACW: ButtonComponent;
 	private btnCrop: ButtonComponent;
+	private btnRemoveBG: ButtonComponent;
 	private btnEdit: ButtonComponent;
 	private btnConfirm: ButtonComponent;
 	private btnCancel: ButtonComponent;
 	private processingNotice: Notice | null;
 	private filterControls: FilterControls;
+	private bgRemovalControls: BackgroundRemovalControls;
 
 	constructor(app: App) {
 		super(app);
@@ -33,6 +37,8 @@ export class ScannerModal extends Modal {
 
 		this.filterPanelWrapper = this.contentEl.createDiv("filter-panel-wrapper");
 		this.filterPanelWrapper.hide();
+		this.bgRemovalPanelWrapper = this.contentEl.createDiv("bg-removal-panel-wrapper");
+		this.bgRemovalPanelWrapper.hide();
 		this.buttonWrapper = this.contentEl.createDiv("button-wrapper");
 		this.confirmButtonWrapper = this.contentEl.createDiv(
 			"confirm-button-wrapper",
@@ -83,6 +89,18 @@ export class ScannerModal extends Modal {
 			.setIcon("crop")
 			.setTooltip("Crop image")
 			.onClick(() => this.toggleCropMode());
+
+		// Initialize background removal controls
+		this.bgRemovalControls = new BackgroundRemovalControls(
+			this.bgRemovalPanelWrapper,
+			() => this.toggleBackgroundRemovalMode(),
+			(tolerance) => this.canvas.updateBgRemovalTolerance(tolerance),
+			(enabled) => this.canvas.toggleBgRemovalPreview(enabled),
+			() => this.confirmBackgroundRemoval(),
+			() => this.cancelBackgroundRemoval(),
+			() => this.canvas.isImageLoaded(),
+		);
+		this.btnRemoveBG = this.bgRemovalControls.createRemoveBGButton(this.buttonWrapper);
 
 		// Initialize filter controls (pass the separate panel wrapper)
 		this.filterControls = new FilterControls(
@@ -187,6 +205,75 @@ export class ScannerModal extends Modal {
 		this.buttonWrapper.show();
 	}
 
+	private toggleBackgroundRemovalMode() {
+		const result = this.canvas.enterBackgroundRemovalMode(
+			(color) => this.bgRemovalControls.updateSampledColor(color)
+		);
+
+		if (!result.success) {
+			new Notice(result.message);
+			return;
+		}
+
+		// Show BG removal panel
+		this.bgRemovalControls.enterRemovalMode();
+		this.bgRemovalPanelWrapper.show();
+
+		// Hide main buttons
+		this.buttonWrapper.hide();
+
+		new Notice(result.message);
+	}
+
+	private async confirmBackgroundRemoval() {
+		try {
+			// Show processing notice
+			this.processingNotice = new Notice("Removing background...", 0);
+
+			// Add a small delay to allow UI to update
+			await new Promise(resolve => setTimeout(resolve, 100));
+
+			const result = await this.canvas.applyBackgroundRemoval();
+
+			// Hide processing notice
+			if (this.processingNotice) {
+				this.processingNotice.hide();
+				this.processingNotice = null;
+			}
+
+			if (result.success) {
+				new Notice(result.message);
+				this.exitBackgroundRemovalMode();
+			} else {
+				new Notice(result.message, 5000);
+			}
+		} catch (error) {
+			// Hide processing notice if it's still showing
+			if (this.processingNotice) {
+				this.processingNotice.hide();
+				this.processingNotice = null;
+			}
+
+			console.error("Error in confirmBackgroundRemoval:", error);
+			new Notice(
+				`Background removal failed: ${error.message}\nCheck console for details.`,
+				6000,
+			);
+		}
+	}
+
+	private cancelBackgroundRemoval() {
+		this.canvas.cancelBackgroundRemoval();
+		this.exitBackgroundRemovalMode();
+		new Notice("Background removal cancelled", 2000);
+	}
+
+	private exitBackgroundRemovalMode() {
+		this.bgRemovalControls.exitRemovalMode();
+		this.bgRemovalPanelWrapper.hide();
+		this.buttonWrapper.show();
+	}
+
 	/**
 	 * Enable or disable all buttons during processing
 	 */
@@ -196,6 +283,7 @@ export class ScannerModal extends Modal {
 		this.btnPhotoRotateCW.setDisabled(!enabled);
 		this.btnPhotoRotateACW.setDisabled(!enabled);
 		this.btnCrop.setDisabled(!enabled);
+		this.btnRemoveBG.setDisabled(!enabled);
 		this.btnEdit.setDisabled(!enabled);
 
 		// Confirmation buttons
@@ -213,6 +301,11 @@ export class ScannerModal extends Modal {
 		// Clean up filter controls
 		if (this.filterControls) {
 			this.filterControls.destroy();
+		}
+
+		// Clean up background removal controls
+		if (this.bgRemovalControls) {
+			this.bgRemovalControls.destroy();
 		}
 	}
 }

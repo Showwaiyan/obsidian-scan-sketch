@@ -311,3 +311,210 @@ If your plugin does not need CSS, delete this file.
 		font-size: 14px;
 	}
 }
+
+/* Background Removal Panel - Similar to filter panel */
+.bg-removal-panel-wrapper {
+	padding: 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.bg-removal-panel-wrapper > div {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	align-items: center;
+	max-width: 500px;
+	width: 100%;
+}
+
+.bg-removal-instruction {
+	font-size: 13px;
+	color: var(--text-muted);
+	text-align: center;
+	font-style: italic;
+	padding: 8px 0;
+}
+
+.bg-removal-control {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+}
+
+.bg-removal-tolerance-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+}
+
+.bg-removal-tolerance-wrapper label {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-normal);
+	min-width: 70px;
+}
+
+.bg-removal-tolerance-slider {
+	flex: 1;
+	height: 5px;
+	border-radius: 3px;
+	background: var(--background-modifier-border);
+	outline: none;
+	opacity: 0.9;
+	transition: opacity 0.2s;
+	cursor: pointer;
+}
+
+.bg-removal-tolerance-slider:hover {
+	opacity: 1;
+}
+
+.bg-removal-tolerance-slider::-webkit-slider-thumb {
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	cursor: pointer;
+	transition: transform 0.1s;
+}
+
+.bg-removal-tolerance-slider::-webkit-slider-thumb:hover {
+	transform: scale(1.15);
+}
+
+.bg-removal-tolerance-slider::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	cursor: pointer;
+	border: none;
+	transition: transform 0.1s;
+}
+
+.bg-removal-tolerance-slider::-moz-range-thumb:hover {
+	transform: scale(1.15);
+}
+
+.bg-removal-tolerance-value {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-accent);
+	min-width: 30px;
+	text-align: right;
+}
+
+.bg-removal-preview-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+}
+
+.bg-removal-preview-wrapper label {
+	font-size: 12px;
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
+.bg-removal-color-display {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	background: var(--background-secondary);
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.bg-removal-color-swatch {
+	width: 36px;
+	height: 36px;
+	border: 2px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: white;
+	flex-shrink: 0;
+}
+
+.bg-removal-color-text {
+	font-size: 12px;
+	font-family: var(--font-monospace);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.bg-removal-actions {
+	display: flex;
+	gap: 12px;
+	margin-top: 4px;
+	width: 100%;
+}
+
+.bg-removal-actions button {
+	flex: 1;
+	padding: 10px 20px;
+	font-size: 13px;
+	border-radius: 6px;
+	font-weight: 500;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+	.bg-removal-panel-wrapper > div {
+		max-width: 100%;
+	}
+
+	.bg-removal-instruction {
+		font-size: 12px;
+	}
+
+	.bg-removal-tolerance-wrapper label {
+		min-width: 60px;
+		font-size: 11px;
+	}
+
+	.bg-removal-tolerance-slider {
+		height: 6px;
+	}
+
+	.bg-removal-tolerance-slider::-webkit-slider-thumb {
+		width: 20px;
+		height: 20px;
+	}
+
+	.bg-removal-tolerance-slider::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+	}
+
+	.bg-removal-color-display {
+		padding: 8px 12px;
+		gap: 10px;
+	}
+
+	.bg-removal-color-swatch {
+		width: 32px;
+		height: 32px;
+	}
+
+	.bg-removal-color-text {
+		font-size: 11px;
+	}
+
+	.bg-removal-actions {
+		gap: 10px;
+	}
+
+	.bg-removal-actions button {
+		padding: 12px 18px;
+		font-size: 14px;
+	}
+}
