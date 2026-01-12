@@ -36,6 +36,7 @@ A powerful Obsidian plugin for scanning, processing, and enhancing handwritten n
 
 ### 🎯 User Experience
 - **Visual Feedback**:
+  - Checkerboard pattern for transparent areas during editing
   - Magnifying loupe when dragging crop points
   - Real-time filter preview
   - Clear status notifications
@@ -105,6 +106,42 @@ A powerful Obsidian plugin for scanning, processing, and enhancing handwritten n
 Access plugin settings via Settings → Obsidian Handwritten Scanner:
 
 - **Export Default Folder**: Set the default folder for saving scanned images (default: root)
+
+## Optional: Enhanced Notebook Styling
+
+For enhanced visual styling with notebook-themed backgrounds and pen colors, you can optionally add CSS snippets from the [Obsidian-Notebook-Themes](https://github.com/CyanVoxel/Obsidian-Notebook-Themes) repository by [@CyanVoxel](https://github.com/CyanVoxel).
+
+### How to Add Notebook Theme CSS:
+
+1. Visit the [Obsidian-Notebook-Themes repository](https://github.com/CyanVoxel/Obsidian-Notebook-Themes)
+2. Download the CSS snippets you want (e.g., notebook background colors, pen colors)
+3. In Obsidian, go to Settings → Appearance → CSS snippets
+4. Click the folder icon to open your snippets folder
+5. Copy the CSS files into this folder
+6. Return to Obsidian and enable the snippets
+
+### Available Notebook Themes:
+
+- **Page Backgrounds**: Manila, White, Blueprint
+- **Pen Colors**: White, Gray, Black, Red, Green, Blue, Light Blue, Purple
+- **Grid Patterns**: Optional grid overlay for notebook paper effect
+- **Image Recoloring**: Recolor images to match your pen color theme
+
+**Example Usage in Notes:**
+```markdown
+---
+cssclasses: page-manila pen-black recolor-images
+---
+```
+
+This applies a manila (tan) page background with black pen styling and recolors images accordingly.
+
+**Important Limitations:**
+- 📌 **SVG Export Only**: The notebook background and image recoloring functionality only works with **SVG exports**, not PNG exports.
+- For best results with notebook themes, always export as SVG format.
+- PNG exports will preserve transparency but won't apply CSS-based recoloring effects.
+
+**Note**: These CSS snippets are completely optional. The plugin works perfectly without them. They simply provide additional theming options for your scanned notes to match a physical notebook aesthetic.
 
 ## Technical Architecture
 
@@ -273,9 +310,7 @@ This project is licensed under the OBSD License - see the LICENSE file for detai
 
 - Built with [Obsidian API](https://github.com/obsidianmd/obsidian-api)
 - Uses [perspective-transform](https://github.com/jlouthan/perspective-transform) for perspective correction
-- CSS styling for notebook background color schemes adapted from [Obsidian-Notebook-Themes](https://github.com/CyanVoxel/Obsidian-Notebook-Themes) by [@CyanVoxel](https://github.com/CyanVoxel) (v2.2.3)
-  - Includes recolor-images functionality and page background color schemes
-  - Color filter generation tool: [CSS Color Filter Generator](https://angel-rs.github.io/css-color-filter-generator)
+- Optional notebook theme CSS snippets available from [Obsidian-Notebook-Themes](https://github.com/CyanVoxel/Obsidian-Notebook-Themes) by [@CyanVoxel](https://github.com/CyanVoxel) (v2.2.3)
 - Inspired by document scanning apps and the Obsidian community
 
 ---
