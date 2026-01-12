@@ -387,7 +387,15 @@ export class ImagePreview {
 		this.applyCurrentFilters();
 	}
 
-	public rotate(degree: number) {
+	public rotate(degree: number): OperationResult {
+		// Check if image is loaded
+		if (this.img == null) {
+			return {
+				success: false,
+				message: "Please upload photo first!",
+			};
+		}
+		
 		console.log("Rotation count:", this.toRotateDegree);
 		
 		// Clear crop points for safety (positions become invalid after rotation)
@@ -417,6 +425,11 @@ export class ImagePreview {
 		
 		// Redraw the image with new rotation
 		this.redrawImage();
+		
+		return {
+			success: true,
+			message: "Image rotated successfully",
+		};
 	}
 
 	private drawCroppingPoints() {
@@ -656,5 +669,13 @@ export class ImagePreview {
 	 */
 	public getFilterConfig(): ImageFilterConfig {
 		return { ...this.filterConfig };
+	}
+
+	/**
+	 * Check if an image is loaded
+	 * @returns true if image is loaded, false otherwise
+	 */
+	public isImageLoaded(): boolean {
+		return this.img != null;
 	}
 }

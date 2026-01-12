@@ -1,4 +1,4 @@
-import { ButtonComponent, setIcon } from "obsidian";
+import { ButtonComponent, Notice, setIcon } from "obsidian";
 import type { ImageFilterConfig } from "../../Services/types";
 
 /**
@@ -11,6 +11,7 @@ export class FilterControls {
 	private isExpanded: boolean;
 	private onFilterChange: (config: Partial<ImageFilterConfig>) => void;
 	private onResetFilters: () => void;
+	private checkImageLoaded: () => boolean;
 
 	// Current filter values
 	private brightness: number;
@@ -28,11 +29,13 @@ export class FilterControls {
 		panelContainer: HTMLElement,
 		onFilterChange: (config: Partial<ImageFilterConfig>) => void,
 		onResetFilters: () => void,
+		checkImageLoaded: () => boolean,
 	) {
 		this.panelContainer = panelContainer;
 		this.gridContainer = this.panelContainer.createDiv();
 		this.onFilterChange = onFilterChange;
 		this.onResetFilters = onResetFilters;
+		this.checkImageLoaded = checkImageLoaded;
 		this.isExpanded = false;
 
 		// Initialize filter values
@@ -68,6 +71,12 @@ export class FilterControls {
 	 * Toggle the filter panel visibility
 	 */
 	public togglePanel() {
+		// Check if image is loaded before showing panel
+		if (!this.isExpanded && !this.checkImageLoaded()) {
+			new Notice("Please upload photo first!");
+			return;
+		}
+		
 		if (this.isExpanded) {
 			this.panelContainer.hide();
 		} else {

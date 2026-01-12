@@ -63,11 +63,21 @@ export class ScannerModal extends Modal {
 		this.btnPhotoRotateCW = new ButtonComponent(this.buttonWrapper)
 			.setIcon("rotate-cw")
 			.setTooltip("Rotate image 90° clockwise")
-			.onClick(() => this.canvas.rotate(90));
+			.onClick(() => {
+				const result = this.canvas.rotate(90);
+				if (!result.success) {
+					new Notice(result.message);
+				}
+			});
 		this.btnPhotoRotateACW = new ButtonComponent(this.buttonWrapper)
 			.setIcon("rotate-ccw")
 			.setTooltip("Rotate image 90° counter-clockwise")
-			.onClick(() => this.canvas.rotate(-90));
+			.onClick(() => {
+				const result = this.canvas.rotate(-90);
+				if (!result.success) {
+					new Notice(result.message);
+				}
+			});
 
 		this.btnCrop = new ButtonComponent(this.buttonWrapper)
 			.setIcon("crop")
@@ -79,6 +89,7 @@ export class ScannerModal extends Modal {
 			this.filterPanelWrapper,
 			(config) => this.canvas.updateFilters(config),
 			() => this.canvas.resetFilters(),
+			() => this.canvas.isImageLoaded(),
 		);
 		this.btnEdit = this.filterControls.createEditButton(this.buttonWrapper);
 
