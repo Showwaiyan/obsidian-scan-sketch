@@ -1,11 +1,10 @@
 {
 	"id": "obsidian-scan-sketch",
-	"name": "Scan Sketch",
+	"name": "Sketch Scanner",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Scan, process, and enhance handwritten notes with perspective correction, background removal, and advanced filtering.",
+	"author": "Show Wai Yan",
+	"authorUrl": "https://github.com/Showwaiyan",
 	"isDesktopOnly": false
 }

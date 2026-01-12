@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-scan-sketch",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Scan, process, and enhance handwritten notes with perspective correction, background removal, and advanced filtering for Obsidian.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -11,9 +11,20 @@
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"scanner",
+		"handwriting",
+		"document-scanner",
+		"image-processing",
+		"perspective-correction",
+		"background-removal",
+		"note-taking",
+		"sketch"
+	],
+	"author": "Show Wai Yan",
+	"license": "OBSD",
 	"devDependencies": {
 		"@types/node": "^20.19.27",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
