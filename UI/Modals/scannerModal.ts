@@ -1,19 +1,23 @@
 import { App, ButtonComponent, Modal, Notice } from "obsidian";
 import { uploadImageToCanvas } from "Services/ImageUpload";
 import { ImagePreview } from "UI/Components/ImagePreview";
+import { FilterControls } from "UI/Components/FilterControls";
 
 export class ScannerModal extends Modal {
 	private container: HTMLElement;
 	private buttonWrapper: HTMLElement;
+	private filterPanelWrapper: HTMLElement;
 	private confirmButtonWrapper: HTMLElement;
 	private canvas: ImagePreview;
 	private btnPhotoUpload: ButtonComponent;
 	private btnPhotoRotateCW: ButtonComponent;
 	private btnPhotoRotateACW: ButtonComponent;
 	private btnCrop: ButtonComponent;
+	private btnEdit: ButtonComponent;
 	private btnConfirm: ButtonComponent;
 	private btnCancel: ButtonComponent;
 	private processingNotice: Notice | null;
+	private filterControls: FilterControls;
 
 	constructor(app: App) {
 		super(app);
@@ -27,6 +31,8 @@ export class ScannerModal extends Modal {
 			1,  // Square 1:1 ratio for initial placeholder
 		);
 
+		this.filterPanelWrapper = this.contentEl.createDiv("filter-panel-wrapper");
+		this.filterPanelWrapper.hide();
 		this.buttonWrapper = this.contentEl.createDiv("button-wrapper");
 		this.confirmButtonWrapper = this.contentEl.createDiv(
 			"confirm-button-wrapper",
@@ -67,6 +73,14 @@ export class ScannerModal extends Modal {
 			.setIcon("crop")
 			.setTooltip("Crop image")
 			.onClick(() => this.toggleCropMode());
+
+		// Initialize filter controls (pass the separate panel wrapper)
+		this.filterControls = new FilterControls(
+			this.filterPanelWrapper,
+			(config) => this.canvas.updateFilters(config),
+			() => this.canvas.resetFilters(),
+		);
+		this.btnEdit = this.filterControls.createEditButton(this.buttonWrapper);
 
 		// Confirmation buttons
 		this.btnConfirm = new ButtonComponent(this.confirmButtonWrapper)
@@ -171,6 +185,7 @@ export class ScannerModal extends Modal {
 		this.btnPhotoRotateCW.setDisabled(!enabled);
 		this.btnPhotoRotateACW.setDisabled(!enabled);
 		this.btnCrop.setDisabled(!enabled);
+		this.btnEdit.setDisabled(!enabled);
 
 		// Confirmation buttons
 		this.btnConfirm.setDisabled(!enabled);
@@ -182,6 +197,11 @@ export class ScannerModal extends Modal {
 		if (this.processingNotice) {
 			this.processingNotice.hide();
 			this.processingNotice = null;
+		}
+
+		// Clean up filter controls
+		if (this.filterControls) {
+			this.filterControls.destroy();
 		}
 	}
 }

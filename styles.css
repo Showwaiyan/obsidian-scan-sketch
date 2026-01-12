@@ -123,3 +123,191 @@ If your plugin does not need CSS, delete this file.
 		gap: 8px; /* Slightly reduced gap between buttons */
 	}
 }
+
+/* Filter Panel Wrapper - 2-column vertical layout above buttons */
+.filter-panel-wrapper {
+	padding: 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.filter-panel-wrapper > div {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px 24px;
+	align-items: start;
+	max-width: 500px;
+	width: 100%;
+}
+
+.filter-control {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.filter-label {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+}
+
+.filter-value {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-accent);
+	min-width: 30px;
+	text-align: right;
+}
+
+.filter-slider {
+	width: 100%;
+	height: 5px;
+	border-radius: 3px;
+	background: var(--background-modifier-border);
+	outline: none;
+	opacity: 0.9;
+	transition: opacity 0.2s;
+	cursor: pointer;
+}
+
+.filter-slider:hover {
+	opacity: 1;
+}
+
+.filter-slider::-webkit-slider-thumb {
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	cursor: pointer;
+	transition: transform 0.1s;
+}
+
+.filter-slider::-webkit-slider-thumb:hover {
+	transform: scale(1.15);
+}
+
+.filter-slider::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	cursor: pointer;
+	border: none;
+	transition: transform 0.1s;
+}
+
+.filter-slider::-moz-range-thumb:hover {
+	transform: scale(1.15);
+}
+
+.filter-slider:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.filter-toggle-wrapper {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.filter-toggle-wrapper .filter-label {
+	font-size: 12px;
+	width: 100%;
+}
+
+.filter-checkbox {
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	accent-color: var(--interactive-accent);
+	align-self: flex-start;
+}
+
+.filter-reset-wrapper {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 8px;
+	border-top: 1px solid var(--background-modifier-border);
+	margin-top: 4px;
+}
+
+.filter-reset-wrapper button {
+	padding: 8px 16px;
+	font-size: 13px;
+	border-radius: 6px;
+	white-space: nowrap;
+}
+
+/* Responsive filter panel - Stack to 1 column on mobile */
+@media (max-width: 600px) {
+	.filter-panel-wrapper {
+		grid-template-columns: 1fr;
+		gap: 14px;
+		padding: 14px;
+	}
+
+	.filter-control {
+		gap: 8px;
+	}
+
+	.filter-label {
+		font-size: 13px;
+	}
+
+	.filter-slider {
+		height: 6px;
+	}
+
+	.filter-slider::-webkit-slider-thumb {
+		width: 20px;
+		height: 20px;
+	}
+
+	.filter-slider::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+	}
+
+	.filter-toggle-wrapper {
+		flex-direction: row;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	.filter-toggle-wrapper .filter-label {
+		font-size: 13px;
+	}
+
+	.filter-checkbox {
+		width: 22px;
+		height: 22px;
+		align-self: center;
+	}
+
+	.filter-reset-wrapper {
+		padding-top: 12px;
+		margin-top: 8px;
+	}
+
+	.filter-reset-wrapper button {
+		width: 100%;
+		padding: 10px 18px;
+		font-size: 14px;
+	}
+}

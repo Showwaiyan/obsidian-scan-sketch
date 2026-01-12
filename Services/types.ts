@@ -69,3 +69,13 @@ export interface PlaceholderConfig {
 	textColor: string;
 	secondaryTextColor: string;
 }
+
+/**
+ * Configuration for image filters
+ */
+export interface ImageFilterConfig {
+	brightness: number;      // -100 to +100
+	contrast: number;        // -100 to +100
+	saturation: number;      // -100 to +100
+	blackAndWhite: boolean;  // High-contrast B&W for documents
+}

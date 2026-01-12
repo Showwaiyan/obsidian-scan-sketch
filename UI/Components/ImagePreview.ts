@@ -19,11 +19,17 @@ import {
 	renderMagnifier,
 } from "Services/CanvasRenderer";
 import {
+	DEFAULT_FILTER_CONFIG,
+	applyFilters,
+	cloneImageData,
+} from "Services/ImageFilter";
+import {
 	CropPoint,
 	CropPointStyle,
 	PlaceholderConfig,
 	MagnifierConfig,
 	OperationResult,
+	ImageFilterConfig,
 } from "Services/types";
 
 export class ImagePreview {
@@ -46,6 +52,11 @@ export class ImagePreview {
 	private croppingPointsVisible: boolean;
 	private cropPoints: CropPoint[];
 	private draggedPointIndex: number;
+
+	// for image filters
+	private filterConfig: ImageFilterConfig;
+	private originalImageData: ImageData | null;
+	private filterDebounceTimer: number | null;
 
 	// Configuration
 	private magnifierConfig: MagnifierConfig;
@@ -97,6 +108,9 @@ export class ImagePreview {
 		this.croppingPointsVisible = false;
 		this.cropPoints = [];
 		this.draggedPointIndex = -1;
+		this.filterConfig = { ...DEFAULT_FILTER_CONFIG };
+		this.originalImageData = null;
+		this.filterDebounceTimer = null;
 
 		// Setup input event handlers (mouse and touch)
 		this.setupInputEvents();
@@ -327,6 +341,9 @@ export class ImagePreview {
 		this.img = new Image();
 
 		this.img.onload = () => {
+			// Reset filters when loading new image (as per user preference Option A)
+			this.filterConfig = { ...DEFAULT_FILTER_CONFIG };
+			
 			// Resize canvas to match image aspect ratio (eliminates letterboxing)
 			this.resizeToImage(this.img.width, this.img.height);
 
@@ -357,6 +374,7 @@ export class ImagePreview {
 		const cssWidth = parseInt(this.canvas.style.width);
 		const cssHeight = parseInt(this.canvas.style.height);
 
+		// Draw the rotated image
 		drawImageWithRotation(
 			this.ctx,
 			this.img,
@@ -364,6 +382,9 @@ export class ImagePreview {
 			cssHeight,
 			this.toRotateDegree,
 		);
+
+		// Apply filters if any are active
+		this.applyCurrentFilters();
 	}
 
 	public rotate(degree: number) {
@@ -371,6 +392,9 @@ export class ImagePreview {
 		
 		// Clear crop points for safety (positions become invalid after rotation)
 		this.removeCroppingPoints();
+		
+		// Reset filters when rotating (as per user preference Option A)
+		this.resetFilters();
 		
 		// Update rotation degree
 		this.toRotateDegree = this.toRotateDegree + degree;
@@ -553,5 +577,84 @@ export class ImagePreview {
 			success: true,
 			message: "Perspective crop applied successfully",
 		};
+	}
+
+	/**
+	 * Apply current filter configuration to the displayed image
+	 * Uses debouncing for performance (200ms delay)
+	 */
+	private applyCurrentFilters() {
+		// Check if any filters are active
+		const hasFilters = this.filterConfig.brightness !== 0 
+			|| this.filterConfig.contrast !== 0 
+			|| this.filterConfig.saturation !== 0 
+			|| this.filterConfig.blackAndWhite;
+
+		if (!hasFilters) {
+			return; // No filters to apply
+		}
+
+		// Get current canvas dimensions
+		const cssWidth = parseInt(this.canvas.style.width);
+		const cssHeight = parseInt(this.canvas.style.height);
+		const dpr = window.devicePixelRatio || 1;
+		const actualWidth = Math.floor(cssWidth * dpr);
+		const actualHeight = Math.floor(cssHeight * dpr);
+
+		// Get image data from canvas
+		const imageData = this.ctx.getImageData(0, 0, actualWidth, actualHeight);
+
+		// Apply filters
+		applyFilters(imageData, this.filterConfig);
+
+		// Put filtered image back on canvas
+		this.ctx.putImageData(imageData, 0, 0);
+	}
+
+	/**
+	 * Update filter configuration and redraw with debouncing
+	 * @param config - New filter configuration
+	 */
+	public updateFilters(config: Partial<ImageFilterConfig>) {
+		// Merge with existing config
+		this.filterConfig = { ...this.filterConfig, ...config };
+
+		// Clear existing debounce timer
+		if (this.filterDebounceTimer !== null) {
+			clearTimeout(this.filterDebounceTimer);
+		}
+
+		// Debounce the redraw (wait 200ms after last update)
+		this.filterDebounceTimer = window.setTimeout(() => {
+			this.redrawImage();
+			
+			// Redraw crop points if visible
+			if (this.croppingPointsVisible) {
+				this.renderCroppingPointsOnCanvas();
+			}
+			
+			this.filterDebounceTimer = null;
+		}, 200);
+	}
+
+	/**
+	 * Reset all filters to default values
+	 */
+	public resetFilters() {
+		this.filterConfig = { ...DEFAULT_FILTER_CONFIG };
+		this.redrawImage();
+
+		// Redraw crop points if visible
+		if (this.croppingPointsVisible) {
+			this.renderCroppingPointsOnCanvas();
+		}
+	}
+
+	/**
+	 * Get current filter configuration
+	 * @returns Current filter config
+	 */
+	public getFilterConfig(): ImageFilterConfig {
+		return { ...this.filterConfig };
 	}
 }
