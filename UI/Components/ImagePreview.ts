@@ -182,24 +182,6 @@ export class ImagePreview {
 		
 		const x = clientX - rect.left - borderLeft;
 		const y = clientY - rect.top - borderTop;
-		
-		// Debug logging for mobile (touch events only)
-		if (event instanceof TouchEvent) {
-			console.log('Touch position debug:', {
-				clientX,
-				clientY,
-				rectLeft: rect.left,
-				rectTop: rect.top,
-				borderLeft,
-				borderTop,
-				finalX: x,
-				finalY: y,
-				canvasStyleWidth: this.canvas.style.width,
-				canvasStyleHeight: this.canvas.style.height,
-				canvasWidth: this.canvas.width,
-				canvasHeight: this.canvas.height,
-			});
-		}
 
 		return { x, y };
 	}
@@ -235,11 +217,14 @@ export class ImagePreview {
 		// Update the dragged crop point's position
 		this.cropPoints = updateCropPoint(this.cropPoints, this.draggedPointIndex, pos.x, pos.y);
 
-		// Redraw the image and crop points
-		this.redrawCroppingPoints();
+		// Redraw the image only (no crop points yet)
+		this.redrawImage();
 
-		// Draw magnifier loupe
+		// Draw magnifier (samples clean canvas without crop points)
 		this.renderMagnifierAtPoint(pos.x, pos.y);
+
+		// Draw crop points on top (all at full opacity, outside magnifier)
+		this.renderCroppingPointsOnCanvas();
 	}
 
 	private onMouseUp(event: MouseEvent) {
@@ -290,11 +275,14 @@ export class ImagePreview {
 		// Update the dragged crop point's position
 		this.cropPoints = updateCropPoint(this.cropPoints, this.draggedPointIndex, pos.x, pos.y);
 
-		// Redraw the image and crop points
-		this.redrawCroppingPoints();
+		// Redraw the image only (no crop points yet)
+		this.redrawImage();
 
-		// Draw magnifier loupe
+		// Draw magnifier (samples clean canvas without crop points)
 		this.renderMagnifierAtPoint(pos.x, pos.y);
+
+		// Draw crop points on top (all at full opacity, outside magnifier)
+		this.renderCroppingPointsOnCanvas();
 	}
 
 	private onTouchEnd(event: TouchEvent) {
@@ -493,7 +481,7 @@ export class ImagePreview {
 	}
 
 	private renderCroppingPointsOnCanvas() {
-		renderCropPoints(this.ctx, this.cropPoints, this.cropPointStyle, this.draggedPointIndex);
+		renderCropPoints(this.ctx, this.cropPoints, this.cropPointStyle);
 	}
 
 	private redrawCroppingPoints() {
@@ -512,8 +500,6 @@ export class ImagePreview {
 			this.ctx,
 			pointX,
 			pointY,
-			this.img,
-			{ x: this.imgX, y: this.imgY, width: this.imgWidth, height: this.imgHeight },
 			cssWidth,
 			cssHeight,
 			this.magnifierConfig,

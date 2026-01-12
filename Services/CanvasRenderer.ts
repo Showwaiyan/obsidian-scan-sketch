@@ -174,13 +174,11 @@ export function renderImageIcon(
  * @param ctx - Canvas rendering context
  * @param points - Array of crop points
  * @param style - Style configuration
- * @param draggedPointIndex - Index of the point being dragged (-1 if none), will be rendered semi-transparent
  */
 export function renderCropPoints(
 	ctx: CanvasRenderingContext2D,
 	points: CropPoint[],
 	style: CropPointStyle,
-	draggedPointIndex: number = -1,
 ): void {
 	if (points.length !== 4) {
 		return;
@@ -199,14 +197,8 @@ export function renderCropPoints(
 	ctx.lineWidth = style.lineWidth;
 	ctx.stroke();
 
-	// Draw the crop points
-	points.forEach((point, index) => {
-		// Make dragged point semi-transparent to not block magnifier view
-		const isBeingDragged = index === draggedPointIndex;
-		const alpha = isBeingDragged ? 0.3 : 1.0;
-		
-		ctx.globalAlpha = alpha;
-		
+	// Draw the crop points (all at full opacity)
+	points.forEach((point) => {
 		// Draw outer circle (white)
 		ctx.beginPath();
 		ctx.arc(point.x, point.y, style.outerRadius, 0, Math.PI * 2);
@@ -221,9 +213,6 @@ export function renderCropPoints(
 		ctx.arc(point.x, point.y, style.innerRadius, 0, Math.PI * 2);
 		ctx.fillStyle = style.innerColor;
 		ctx.fill();
-		
-		// Reset alpha for next point
-		ctx.globalAlpha = 1.0;
 	});
 
 	ctx.restore();
@@ -235,8 +224,6 @@ export function renderCropPoints(
  * @param ctx - Canvas rendering context
  * @param pointX - X coordinate of the point being dragged
  * @param pointY - Y coordinate of the point being dragged
- * @param image - Source image to magnify
- * @param imageRect - Rectangle representing where the image is displayed
  * @param canvasWidth - Canvas width (CSS pixels)
  * @param canvasHeight - Canvas height (CSS pixels)
  * @param config - Magnifier configuration
@@ -245,8 +232,6 @@ export function renderMagnifier(
 	ctx: CanvasRenderingContext2D,
 	pointX: number,
 	pointY: number,
-	image: HTMLImageElement,
-	imageRect: { x: number; y: number; width: number; height: number },
 	canvasWidth: number,
 	canvasHeight: number,
 	config: MagnifierConfig,
@@ -275,6 +260,54 @@ export function renderMagnifier(
 		magnifierY = canvasHeight - config.radius - 10;
 	}
 
+	// Get DPR for sampling the canvas at correct resolution
+	const dpr = window.devicePixelRatio || 1;
+
+	// Calculate the source area to magnify (area around the dragged point)
+	const sourceSize = (config.radius * 2) / config.zoom;
+	const sourceX = pointX - sourceSize / 2;
+	const sourceY = pointY - sourceSize / 2;
+
+	// Sample from the current canvas state (which includes rotation, filters, etc.)
+	const actualSourceX = Math.floor(sourceX * dpr);
+	const actualSourceY = Math.floor(sourceY * dpr);
+	const actualSourceSize = Math.floor(sourceSize * dpr);
+
+	// Get the image data from the current canvas state
+	const canvasImageData = ctx.getImageData(
+		actualSourceX,
+		actualSourceY,
+		actualSourceSize,
+		actualSourceSize
+	);
+
+	// Create temporary canvas for magnified content
+	const tempCanvas = document.createElement("canvas");
+	const destSize = config.radius * 2;
+	tempCanvas.width = destSize;
+	tempCanvas.height = destSize;
+	const tempCtx = tempCanvas.getContext("2d");
+
+	if (!tempCtx) {
+		return;
+	}
+
+	// Create a temporary canvas to hold the sampled image data at original size
+	const sampleCanvas = document.createElement("canvas");
+	sampleCanvas.width = actualSourceSize;
+	sampleCanvas.height = actualSourceSize;
+	const sampleCtx = sampleCanvas.getContext("2d");
+
+	if (!sampleCtx) {
+		return;
+	}
+
+	// Put the sampled image data onto the sample canvas
+	sampleCtx.putImageData(canvasImageData, 0, 0);
+
+	// Draw the sampled content scaled up (magnified) onto temp canvas
+	tempCtx.drawImage(sampleCanvas, 0, 0, actualSourceSize, actualSourceSize, 0, 0, destSize, destSize);
+
 	// Save context state
 	ctx.save();
 
@@ -283,50 +316,10 @@ export function renderMagnifier(
 	ctx.arc(magnifierX, magnifierY, config.radius, 0, Math.PI * 2);
 	ctx.clip();
 
-	// Draw magnified content
-	// Calculate the source area to magnify (area around the dragged point)
-	const sourceSize = (config.radius * 2) / config.zoom;
-	const sourceX = pointX - sourceSize / 2;
-	const sourceY = pointY - sourceSize / 2;
-
-	// Destination area (the magnifier circle)
+	// Draw the magnified content onto main canvas
 	const destX = magnifierX - config.radius;
 	const destY = magnifierY - config.radius;
-	const destSize = config.radius * 2;
-
-	// Convert canvas coordinates to image coordinates
-	const imgRelX = sourceX - imageRect.x;
-	const imgRelY = sourceY - imageRect.y;
-	const imgRelSize = sourceSize;
-
-	// Calculate the scale factor between displayed image and original image
-	const scaleX = image.width / imageRect.width;
-	const scaleY = image.height / imageRect.height;
-
-	// Convert to original image coordinates
-	const origX = imgRelX * scaleX;
-	const origY = imgRelY * scaleY;
-	const origSize = imgRelSize * scaleX;
-
-	// Use a temporary canvas to draw clean magnified content
-	const tempCanvas = document.createElement("canvas");
-	tempCanvas.width = destSize;
-	tempCanvas.height = destSize;
-	const tempCtx = tempCanvas.getContext("2d");
-
-	if (tempCtx) {
-		// Draw directly from the original image (no crop points)
-		tempCtx.drawImage(
-			image,
-			origX, origY,           // Source position on original image
-			origSize, origSize,     // Source size
-			0, 0,                   // Destination position
-			destSize, destSize,      // Destination size (magnified)
-		);
-
-		// Draw the magnified content onto main canvas
-		ctx.drawImage(tempCanvas, destX, destY, destSize, destSize);
-	}
+	ctx.drawImage(tempCanvas, destX, destY, destSize, destSize);
 
 	// Restore context (removes clipping)
 	ctx.restore();
