@@ -161,20 +161,47 @@ export class ImagePreview {
 	 */
 	private getPointerPosition(event: MouseEvent | TouchEvent): { x: number; y: number } | null {
 		const rect = this.canvas.getBoundingClientRect();
+		
+		// Get computed border width (canvas has 5px border in CSS)
+		const computedStyle = window.getComputedStyle(this.canvas);
+		const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+		const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
+		
+		let clientX: number;
+		let clientY: number;
 
 		if (event instanceof MouseEvent) {
-			return {
-				x: event.clientX - rect.left,
-				y: event.clientY - rect.top,
-			};
+			clientX = event.clientX;
+			clientY = event.clientY;
 		} else if (event instanceof TouchEvent && event.touches.length > 0) {
-			return {
-				x: event.touches[0].clientX - rect.left,
-				y: event.touches[0].clientY - rect.top,
-			};
+			clientX = event.touches[0].clientX;
+			clientY = event.touches[0].clientY;
+		} else {
+			return null;
+		}
+		
+		const x = clientX - rect.left - borderLeft;
+		const y = clientY - rect.top - borderTop;
+		
+		// Debug logging for mobile (touch events only)
+		if (event instanceof TouchEvent) {
+			console.log('Touch position debug:', {
+				clientX,
+				clientY,
+				rectLeft: rect.left,
+				rectTop: rect.top,
+				borderLeft,
+				borderTop,
+				finalX: x,
+				finalY: y,
+				canvasStyleWidth: this.canvas.style.width,
+				canvasStyleHeight: this.canvas.style.height,
+				canvasWidth: this.canvas.width,
+				canvasHeight: this.canvas.height,
+			});
 		}
 
-		return null;
+		return { x, y };
 	}
 
 	private onMouseDown(event: MouseEvent) {
@@ -182,17 +209,16 @@ export class ImagePreview {
 			return;
 		}
 
-		const rect = this.canvas.getBoundingClientRect();
-		const mouseX = event.clientX - rect.left;
-		const mouseY = event.clientY - rect.top;
+		const pos = this.getPointerPosition(event);
+		if (!pos) return;
 
 		// Find which crop point (if any) was clicked (20px hit area)
-		const clickedIndex = findCropPointAtPosition(mouseX, mouseY, this.cropPoints, 20);
+		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 20);
 
 		if (clickedIndex !== -1) {
 			this.draggedPointIndex = clickedIndex;
 			this.cropPoints = setCropPointDragging(this.cropPoints, clickedIndex, true);
-			console.log(`Crop point ${clickedIndex} clicked at (${mouseX}, ${mouseY})`);
+			console.log(`Crop point ${clickedIndex} clicked at (${pos.x}, ${pos.y})`);
 		} else {
 			this.draggedPointIndex = -1;
 		}
@@ -203,18 +229,17 @@ export class ImagePreview {
 			return;
 		}
 
-		const rect = this.canvas.getBoundingClientRect();
-		const mouseX = event.clientX - rect.left;
-		const mouseY = event.clientY - rect.top;
+		const pos = this.getPointerPosition(event);
+		if (!pos) return;
 
 		// Update the dragged crop point's position
-		this.cropPoints = updateCropPoint(this.cropPoints, this.draggedPointIndex, mouseX, mouseY);
+		this.cropPoints = updateCropPoint(this.cropPoints, this.draggedPointIndex, pos.x, pos.y);
 
 		// Redraw the image and crop points
 		this.redrawCroppingPoints();
 
 		// Draw magnifier loupe
-		this.renderMagnifierAtPoint(mouseX, mouseY);
+		this.renderMagnifierAtPoint(pos.x, pos.y);
 	}
 
 	private onMouseUp(event: MouseEvent) {
@@ -468,7 +493,7 @@ export class ImagePreview {
 	}
 
 	private renderCroppingPointsOnCanvas() {
-		renderCropPoints(this.ctx, this.cropPoints, this.cropPointStyle);
+		renderCropPoints(this.ctx, this.cropPoints, this.cropPointStyle, this.draggedPointIndex);
 	}
 
 	private redrawCroppingPoints() {
@@ -752,11 +777,10 @@ export class ImagePreview {
 	 * Handle click event for sampling background color
 	 */
 	private onBackgroundSampleClick(event: MouseEvent): void {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
+		const pos = this.getPointerPosition(event);
+		if (!pos) return;
 
-		this.sampleBackgroundAtPoint(x, y);
+		this.sampleBackgroundAtPoint(pos.x, pos.y);
 	}
 
 	/**

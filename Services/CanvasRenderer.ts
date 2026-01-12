@@ -174,11 +174,13 @@ export function renderImageIcon(
  * @param ctx - Canvas rendering context
  * @param points - Array of crop points
  * @param style - Style configuration
+ * @param draggedPointIndex - Index of the point being dragged (-1 if none), will be rendered semi-transparent
  */
 export function renderCropPoints(
 	ctx: CanvasRenderingContext2D,
 	points: CropPoint[],
 	style: CropPointStyle,
+	draggedPointIndex: number = -1,
 ): void {
 	if (points.length !== 4) {
 		return;
@@ -198,7 +200,13 @@ export function renderCropPoints(
 	ctx.stroke();
 
 	// Draw the crop points
-	points.forEach((point) => {
+	points.forEach((point, index) => {
+		// Make dragged point semi-transparent to not block magnifier view
+		const isBeingDragged = index === draggedPointIndex;
+		const alpha = isBeingDragged ? 0.3 : 1.0;
+		
+		ctx.globalAlpha = alpha;
+		
 		// Draw outer circle (white)
 		ctx.beginPath();
 		ctx.arc(point.x, point.y, style.outerRadius, 0, Math.PI * 2);
@@ -213,6 +221,9 @@ export function renderCropPoints(
 		ctx.arc(point.x, point.y, style.innerRadius, 0, Math.PI * 2);
 		ctx.fillStyle = style.innerColor;
 		ctx.fill();
+		
+		// Reset alpha for next point
+		ctx.globalAlpha = 1.0;
 	});
 
 	ctx.restore();
