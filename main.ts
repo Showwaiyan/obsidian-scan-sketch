@@ -1,7 +1,5 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 
-import { ScannerModal } from "./UI/Modals/scannerModal";
-
 interface HandwrittenScannerSettings {
 	exportDefaultFolder: string;
 }
@@ -17,8 +15,10 @@ export default class HandWrittenPlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		this.addRibbonIcon("scan", "Scanner", (_evt: MouseEvent) => {
+		this.addRibbonIcon("scan", "Scanner", async (_evt: MouseEvent) => {
 			// Called when the user clicks the icon.
+			// Lazy load ScannerModal only when needed
+			const { ScannerModal } = await import("./UI/Modals/scannerModal");
 			new ScannerModal(this.app, this).open();
 		});
 
@@ -26,7 +26,9 @@ export default class HandWrittenPlugin extends Plugin {
 		this.addCommand({
 			id: "scan-sketch",
 			name: "Scan a sketch",
-			callback: () => {
+			callback: async () => {
+				// Lazy load ScannerModal only when needed
+				const { ScannerModal } = await import("./UI/Modals/scannerModal");
 				new ScannerModal(this.app, this).open();
 			},
 		});
