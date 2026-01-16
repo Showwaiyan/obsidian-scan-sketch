@@ -50,14 +50,38 @@ A powerful Obsidian plugin for scanning, processing, and enhancing handwritten n
 
 ## Installation
 
-### From Obsidian Community Plugins (Comming Soon)
+### From Obsidian Community Plugins (Coming Soon)
 1. Open Obsidian Settings
 2. Navigate to Community Plugins
 3. Search for "Handwritten Scanner"
 4. Click Install
 5. Enable the plugin
 
-### Manual Installation
+### Beta Testing with BRAT (Recommended for now)
+
+**⚠️ Important:** Manual installation may cause the plugin to crash on mobile devices. Until the official community plugin release, we recommend using BRAT for installation.
+
+1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat) from Obsidian Community Plugins:
+   - Open Obsidian Settings → Community Plugins
+   - Search for "BRAT" (Beta Reviewers Auto-update Tool)
+   - Install and enable BRAT
+
+2. Add this plugin via BRAT:
+   - Open BRAT settings (Settings → BRAT)
+   - Click "Add Beta plugin"
+   - Enter: `showwaiyan/obsidian-scan-sketch`
+   - Click "Add Plugin"
+
+3. Enable the plugin:
+   - Go to Settings → Community Plugins
+   - Find "Sketch Scanner" and enable it
+
+BRAT will automatically keep the plugin updated with the latest releases.
+
+### Manual Installation (Desktop Only)
+
+**⚠️ Warning:** Manual installation can cause crashes on mobile devices. Use BRAT instead if you use Obsidian on mobile.
+
 1. Download the latest release from GitHub
 2. Extract files to `VaultFolder/.obsidian/plugins/obsidian-scan-sketch/`
 3. Reload Obsidian
