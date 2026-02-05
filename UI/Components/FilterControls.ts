@@ -1,4 +1,4 @@
-import { ButtonComponent, Notice, setIcon } from "obsidian";
+import { ButtonComponent, Notice } from "obsidian";
 import type { ImageFilterConfig } from "../../Services/types";
 
 /**

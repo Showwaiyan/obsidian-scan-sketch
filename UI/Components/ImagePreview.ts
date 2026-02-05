@@ -12,8 +12,6 @@ import {
 	calculateRotatedDimensions,
 } from "Services/ImageTransform";
 import {
-	clearCanvas,
-	fillCanvas,
 	fillCanvasWithCheckerboard,
 	renderPlaceholder,
 	renderCropPoints,
@@ -22,7 +20,6 @@ import {
 import {
 	DEFAULT_FILTER_CONFIG,
 	applyFilters,
-	cloneImageData,
 } from "Services/ImageFilter";
 import {
 	sampleColorAtPoint,

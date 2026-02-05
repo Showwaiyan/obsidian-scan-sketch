@@ -1,4 +1,4 @@
-import { ButtonComponent, Notice } from "obsidian";
+import { ButtonComponent } from "obsidian";
 import type { RGB } from "../../Services/ImageBackgroundRemoval";
 import { formatRGBColor, rgbToCSSColor } from "../../Services/ImageBackgroundRemoval";
 
@@ -252,7 +252,7 @@ export class BackgroundRemovalControls {
 		const wrapper = this.gridContainer.createDiv("bg-removal-control");
 		const displayWrapper = wrapper.createDiv("bg-removal-color-display");
 
-		const label = displayWrapper.createSpan({ text: "Sampled Color:" });
+		displayWrapper.createSpan({ text: "Sampled Color:" });
 
 	this.colorSwatch = displayWrapper.createDiv("bg-removal-color-swatch");
 	this.colorSwatch.setCssProps({ backgroundColor: "transparent" });

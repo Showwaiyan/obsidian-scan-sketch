@@ -91,8 +91,6 @@ export function applySaturation(
  */
 export function convertToBlackAndWhite(imageData: ImageData): void {
 	const data = imageData.data;
-	const width = imageData.width;
-	const height = imageData.height;
 	
 	// First pass: Convert to grayscale and calculate histogram
 	const grayValues = new Uint8Array(data.length / 4);
