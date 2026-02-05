@@ -168,14 +168,14 @@ export class ExportModal extends Modal {
 			// Show processing notice
 			const processingNotice = new Notice("Exporting...", 0);
 
-			try {
-				// Export canvas based on format
-				let blob: Blob;
-				if (this.selectedFormat === "png") {
-					blob = await exportCanvasToPNG(this.canvas);
-				} else {
-					blob = await exportCanvasToSVG(this.canvas);
-				}
+		try {
+			// Export canvas based on format
+			let blob: Blob;
+			if (this.selectedFormat === "png") {
+				blob = await exportCanvasToPNG(this.canvas);
+			} else {
+				blob = exportCanvasToSVG(this.canvas);
+			}
 
 				// Save to vault
 				const file = await saveToVault(

@@ -76,9 +76,9 @@ export function exportCanvasToPNG(
  * @param canvas - Canvas element to export
  * @returns SVG blob with embedded PNG
  */
-export async function exportCanvasToSVG(
+export function exportCanvasToSVG(
 	canvas: HTMLCanvasElement,
-): Promise<Blob> {
+): Blob {
 	// Convert canvas to PNG data URL
 	const pngDataURL = canvas.toDataURL("image/png", 1.0);
 

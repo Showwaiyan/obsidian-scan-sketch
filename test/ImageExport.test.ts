@@ -163,39 +163,39 @@ describe("ImageExport", () => {
 			}
 		});
 
-		it("should create valid SVG blob", async () => {
-			const blob = await exportCanvasToSVG(canvas);
-			expect(blob).toBeInstanceOf(Blob);
-			expect(blob.type).toBe("image/svg+xml");
-		});
+	it("should create valid SVG blob", async () => {
+		const blob = exportCanvasToSVG(canvas);
+		expect(blob).toBeInstanceOf(Blob);
+		expect(blob.type).toBe("image/svg+xml");
+	});
 
-		it("should include XML declaration", async () => {
-			const blob = await exportCanvasToSVG(canvas);
-			const text = await blob.text();
-			expect(text).toContain('<?xml version="1.0"');
-		});
+	it("should include XML declaration", async () => {
+		const blob = exportCanvasToSVG(canvas);
+		const text = await blob.text();
+		expect(text).toContain('<?xml version="1.0"');
+	});
 
-		it("should include proper xmlns", async () => {
-			const blob = await exportCanvasToSVG(canvas);
-			const text = await blob.text();
-			expect(text).toContain('xmlns="http://www.w3.org/2000/svg"');
-		});
+	it("should include proper xmlns", async () => {
+		const blob = exportCanvasToSVG(canvas);
+		const text = await blob.text();
+		expect(text).toContain('xmlns="http://www.w3.org/2000/svg"');
+	});
 
-		it("should embed PNG as base64", async () => {
-			const blob = await exportCanvasToSVG(canvas);
-			const text = await blob.text();
-			expect(text).toContain("<image");
-			// Note: canvas.toDataURL() may return empty string in test environment
-			// In real browser, this would contain "data:image/png;base64"
-			expect(text).toContain('href="');
-		});
+	it("should embed PNG as base64", async () => {
+		const blob = exportCanvasToSVG(canvas);
+		const text = await blob.text();
+		expect(text).toContain("<image");
+		// Note: canvas.toDataURL() may return empty string in test environment
+		// In real browser, this would contain "data:image/png;base64"
+		expect(text).toContain('href="');
+	});
 
-		it("should preserve canvas dimensions", async () => {
-			const blob = await exportCanvasToSVG(canvas);
-			const text = await blob.text();
-			expect(text).toContain('width="200"');
-			expect(text).toContain('height="150"');
-		});
+	it("should preserve canvas dimensions", async () => {
+		const blob = exportCanvasToSVG(canvas);
+		const text = await blob.text();
+		expect(text).toContain('width="200"');
+		expect(text).toContain('height="150"');
+	});
 	});
 
 	describe("blobToArrayBuffer", () => {
