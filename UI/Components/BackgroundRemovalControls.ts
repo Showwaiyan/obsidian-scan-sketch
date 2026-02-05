@@ -254,8 +254,8 @@ export class BackgroundRemovalControls {
 
 		const label = displayWrapper.createSpan({ text: "Sampled Color:" });
 
-		this.colorSwatch = displayWrapper.createDiv("bg-removal-color-swatch");
-		this.colorSwatch.style.backgroundColor = "transparent";
+	this.colorSwatch = displayWrapper.createDiv("bg-removal-color-swatch");
+	this.colorSwatch.setCssProps({ backgroundColor: "transparent" });
 
 		this.colorText = displayWrapper.createSpan({
 			text: "None",
@@ -269,13 +269,13 @@ export class BackgroundRemovalControls {
 	private updateColorDisplay(color: RGB | null) {
 		if (!this.colorSwatch || !this.colorText) return;
 
-		if (color) {
-			this.colorSwatch.style.backgroundColor = rgbToCSSColor(color);
-			this.colorText.setText(formatRGBColor(color));
-		} else {
-			this.colorSwatch.style.backgroundColor = "transparent";
-			this.colorText.setText("None");
-		}
+	if (color) {
+		this.colorSwatch.setCssProps({ backgroundColor: rgbToCSSColor(color) });
+		this.colorText.setText(formatRGBColor(color));
+	} else {
+		this.colorSwatch.setCssProps({ backgroundColor: "transparent" });
+		this.colorText.setText("None");
+	}
 	}
 
 	/**
