@@ -59,7 +59,7 @@ export class ScannerModal extends Modal {
 	} catch (error) {
 		console.error(`Error: ${error.message}`);
 		new Notice(
-			"Cannot create image preview canvas\nPlease review details in console",
+			"Cannot create image preview canvas, please review details in console",
 		);
 	}
 

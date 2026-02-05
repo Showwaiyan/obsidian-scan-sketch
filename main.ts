@@ -24,8 +24,8 @@ export default class HandWrittenPlugin extends Plugin {
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: "scan-sketch",
-			name: "Scan sketch",
+			id: "open-sketch-scanner",
+			name: "Open sketch scanner",
 			callback: async () => {
 				// Lazy load ScannerModal only when needed
 				const { ScannerModal } = await import("./UI/Modals/scannerModal");
