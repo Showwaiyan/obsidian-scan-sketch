@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-scan-sketch",
-	"name": "Sketch Scanner",
+	"name": "Scan Sketch",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Scan, process, and enhance handwritten notes with perspective correction, background removal, and advanced filtering.",
