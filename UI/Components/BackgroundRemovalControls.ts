@@ -15,7 +15,7 @@ export class BackgroundRemovalControls {
 	// Callbacks
 	private onToleranceChange: (tolerance: number) => void;
 	private onPreviewToggle: (enabled: boolean) => void;
-	private onApply: () => void;
+	private onApply: () => void | Promise<void>;
 	private onCancel: () => void;
 	private checkImageLoaded: () => boolean;
 
@@ -37,7 +37,7 @@ export class BackgroundRemovalControls {
 		onToggleMode: () => void,
 		onToleranceChange: (tolerance: number) => void,
 		onPreviewToggle: (enabled: boolean) => void,
-		onApply: () => void,
+		onApply: () => void | Promise<void>,
 		onCancel: () => void,
 		checkImageLoaded: () => boolean,
 	) {
@@ -290,7 +290,7 @@ export class BackgroundRemovalControls {
 			.setTooltip("Apply background removal")
 			.setCta()
 			.onClick(() => {
-				this.onApply();
+				void this.onApply();
 			});
 
 		new ButtonComponent(actionsWrapper)

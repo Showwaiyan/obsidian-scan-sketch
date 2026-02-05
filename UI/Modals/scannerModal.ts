@@ -53,7 +53,7 @@ export class ScannerModal extends Modal {
 		this.processingNotice = null;
 	}
 
-	async onOpen() {
+	onOpen() {
 		try {
 		this.canvas.setup();
 	} catch (error) {
@@ -307,7 +307,7 @@ export class ScannerModal extends Modal {
 		this.btnCancel.setDisabled(!enabled);
 	}
 
-	async onClose() {
+	onClose() {
 		// Clean up processing notice if modal is closed while processing
 		if (this.processingNotice) {
 			this.processingNotice.hide();

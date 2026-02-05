@@ -733,15 +733,15 @@ export class ImagePreview {
 
 		// Save current state for cancellation
 		this.originalImageDataBeforeRemoval = this.getCurrentImageData();
-		this.backgroundRemovalMode = true;
-		this.sampledBackgroundColor = null;
-		this.onColorSampled = onColorSampled || null;
+	this.backgroundRemovalMode = true;
+	this.sampledBackgroundColor = null;
+	this.onColorSampled = onColorSampled || null;
 
-		// Change cursor to crosshair
-		this.canvas.style.cursor = "crosshair";
+	// Change cursor to crosshair
+	this.canvas.setCssProps({ cursor: "crosshair" });
 
-		// Set up click listener for sampling
-		this.canvas.addEventListener("click", this.onBackgroundSampleClick.bind(this));
+	// Set up click listener for sampling
+	this.canvas.addEventListener("click", this.onBackgroundSampleClick.bind(this));
 
 		return { success: true, message: "Click on background to sample" };
 	}
@@ -749,15 +749,15 @@ export class ImagePreview {
 	/**
 	 * Exit background removal mode
 	 */
-	public exitBackgroundRemovalMode(): void {
-		this.backgroundRemovalMode = false;
-		
-		// Restore default cursor
-		this.canvas.style.cursor = "default";
-		
-		// Remove click listener
-		this.canvas.removeEventListener("click", this.onBackgroundSampleClick.bind(this));
-	}
+public exitBackgroundRemovalMode(): void {
+	this.backgroundRemovalMode = false;
+	
+	// Restore default cursor
+	this.canvas.setCssProps({ cursor: "default" });
+	
+	// Remove click listener
+	this.canvas.removeEventListener("click", this.onBackgroundSampleClick.bind(this));
+}
 
 	/**
 	 * Handle click event for sampling background color
