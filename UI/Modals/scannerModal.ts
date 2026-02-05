@@ -55,13 +55,13 @@ export class ScannerModal extends Modal {
 
 	async onOpen() {
 		try {
-			this.canvas.setup();
-		} catch (error) {
-			console.log(`Error: ${error.message}`);
-			new Notice(
-				"Cannot create image preview canvas\nPlease review details in console",
-			);
-		}
+		this.canvas.setup();
+	} catch (error) {
+		console.error(`Error: ${error.message}`);
+		new Notice(
+			"Cannot create image preview canvas\nPlease review details in console",
+		);
+	}
 
 		//btn setup
 		this.btnPhotoUpload = new ButtonComponent(this.buttonWrapper)

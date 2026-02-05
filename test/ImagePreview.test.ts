@@ -80,18 +80,18 @@ describe("ImagePreview", () => {
 			expect(mockCtx.clearRect).toHaveBeenCalled();
 		});
 
-		it("should accumulate rotation degrees", () => {
-			const consoleSpy = vi.spyOn(console, "log");
+	it("should accumulate rotation degrees", () => {
+		const consoleSpy = vi.spyOn(console, "debug");
 
-			imagePreview.rotate(90);
-			expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 0);
+		imagePreview.rotate(90);
+		expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 0);
 
-			imagePreview.rotate(90);
-			expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 90);
+		imagePreview.rotate(90);
+		expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 90);
 
-			imagePreview.rotate(-45);
-			expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 180);
-		});
+		imagePreview.rotate(-45);
+		expect(consoleSpy).toHaveBeenCalledWith("Rotation count:", 180);
+	});
 
 		it("should apply transformation when rotating", () => {
 			mockCtx.save.mockClear();

@@ -198,9 +198,9 @@ export class ImagePreview {
 		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 20);
 
 		if (clickedIndex !== -1) {
-			this.draggedPointIndex = clickedIndex;
-			this.cropPoints = setCropPointDragging(this.cropPoints, clickedIndex, true);
-			console.log(`Crop point ${clickedIndex} clicked at (${pos.x}, ${pos.y})`);
+		this.draggedPointIndex = clickedIndex;
+		this.cropPoints = setCropPointDragging(this.cropPoints, clickedIndex, true);
+		console.debug(`Crop point ${clickedIndex} clicked at (${pos.x}, ${pos.y})`);
 		} else {
 			this.draggedPointIndex = -1;
 		}
@@ -254,9 +254,9 @@ export class ImagePreview {
 		const clickedIndex = findCropPointAtPosition(pos.x, pos.y, this.cropPoints, 30);
 
 		if (clickedIndex !== -1) {
-			this.draggedPointIndex = clickedIndex;
-			this.cropPoints = setCropPointDragging(this.cropPoints, clickedIndex, true);
-			console.log(`Crop point ${clickedIndex} touched at (${pos.x}, ${pos.y})`);
+		this.draggedPointIndex = clickedIndex;
+		this.cropPoints = setCropPointDragging(this.cropPoints, clickedIndex, true);
+		console.debug(`Crop point ${clickedIndex} touched at (${pos.x}, ${pos.y})`);
 		} else {
 			this.draggedPointIndex = -1;
 		}
@@ -363,11 +363,11 @@ export class ImagePreview {
 	private initializePlaceholder() {
 		const cssWidth = parseInt(this.canvas.style.width);
 		const cssHeight = parseInt(this.canvas.style.height);
-		const dpr = window.devicePixelRatio || 1;
+	const dpr = window.devicePixelRatio || 1;
 
-		console.log("Canvas dimensions:", cssWidth, cssHeight, "DPR:", dpr);
+	console.debug("Canvas dimensions:", cssWidth, cssHeight, "DPR:", dpr);
 
-		renderPlaceholder(this.ctx, cssWidth, cssHeight, this.placeholderConfig);
+	renderPlaceholder(this.ctx, cssWidth, cssHeight, this.placeholderConfig);
 	}
 
 	public darawImage(file: File) {
@@ -429,11 +429,11 @@ export class ImagePreview {
 				success: false,
 				message: "Please upload photo first!",
 			};
-		}
-		
-		console.log("Rotation count:", this.toRotateDegree);
-		
-		// Clear crop points for safety (positions become invalid after rotation)
+	}
+	
+	console.debug("Rotation count:", this.toRotateDegree);
+	
+	// Clear crop points for safety (positions become invalid after rotation)
 		this.removeCroppingPoints();
 		
 		// Reset filters when rotating (as per user preference Option A)
@@ -569,14 +569,14 @@ export class ImagePreview {
 		const actualWidth = Math.floor(cssWidth * dpr);
 		const actualHeight = Math.floor(cssHeight * dpr);
 		
-		const sourceImageData = this.ctx.getImageData(0, 0, actualWidth, actualHeight);
+	const sourceImageData = this.ctx.getImageData(0, 0, actualWidth, actualHeight);
 
-		console.log("Performing perspective crop:", {
-			points: this.cropPoints,
-			canvasDimensions: { cssWidth, cssHeight, actualWidth, actualHeight, dpr },
-		});
+	console.debug("Performing perspective crop:", {
+		points: this.cropPoints,
+		canvasDimensions: { cssWidth, cssHeight, actualWidth, actualHeight, dpr },
+	});
 
-		// Perform the transformation
+	// Perform the transformation
 		const result = performPerspectiveCrop(
 			sourceImageData,
 			actualWidth,
@@ -620,9 +620,9 @@ export class ImagePreview {
 
 			// Hide crop points
 			this.cropPoints = [];
-			this.croppingPointsVisible = false;
+		this.croppingPointsVisible = false;
 
-			console.log("Perspective crop completed successfully");
+		console.debug("Perspective crop completed successfully");
 		}).catch((error) => {
 			console.error("Error creating image from crop:", error);
 		});
