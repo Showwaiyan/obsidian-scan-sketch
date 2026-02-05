@@ -231,7 +231,7 @@ export class FilterControls {
 		const btnWrapper = this.gridContainer.createDiv("filter-reset-wrapper");
 		
 		new ButtonComponent(btnWrapper)
-			.setButtonText("Reset Filters")
+			.setButtonText("Reset filters")
 			.setTooltip("Reset all filters to default")
 			.onClick(() => {
 				this.resetAllControls();

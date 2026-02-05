@@ -31,7 +31,7 @@ export class ScannerModal extends Modal {
 	constructor(app: App, plugin: HandWrittenPlugin) {
 		super(app);
 		this.plugin = plugin;
-		this.setTitle("Scan Your Note");
+		this.setTitle("Scan your note");
 		this.modalEl.addClass("scanner-modal");
 
 		this.container = this.contentEl.createDiv("scanner-modal-container");
@@ -59,7 +59,7 @@ export class ScannerModal extends Modal {
 		} catch (error) {
 			console.log(`Error: ${error.message}`);
 			new Notice(
-				"Cannot Create Image Preview Canvas\nPlease review details in Console",
+				"Cannot create image preview canvas\nPlease review details in console",
 			);
 		}
 

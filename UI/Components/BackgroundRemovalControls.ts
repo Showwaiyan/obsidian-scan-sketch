@@ -235,7 +235,7 @@ export class BackgroundRemovalControls {
 			},
 		});
 
-		const label = toggleWrapper.createEl("label", { text: "Show Preview" });
+		const label = toggleWrapper.createEl("label", { text: "Show preview" });
 		label.htmlFor = "bg-preview-checkbox";
 
 		this.previewCheckbox.addEventListener("change", (e) => {

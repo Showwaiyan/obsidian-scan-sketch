@@ -66,7 +66,7 @@ class HandwrittenScannerSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Default Export Folder")
+			.setName("Default export folder")
 			.setDesc("Folder path where scanned images will be saved (e.g., 'Scanned' or 'Notes/Scans')")
 			.addText((text) =>
 				text

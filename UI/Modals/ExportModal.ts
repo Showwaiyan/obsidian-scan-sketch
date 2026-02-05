@@ -32,7 +32,7 @@ export class ExportModal extends Modal {
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.addClass("export-modal");
-		this.setTitle("Export Scanned Image");
+		this.setTitle("Export scanned image");
 
 		// Format selector
 		this.buildFormatSelector(contentEl);
@@ -119,7 +119,7 @@ export class ExportModal extends Modal {
 		folderPath.textContent = this.defaultFolder || "Root folder";
 
 		const note = section.createDiv("export-folder-note");
-		note.textContent = "(Change default folder in plugin settings)";
+		note.textContent = "(change default folder in plugin settings)";
 	}
 
 	private buildActionButtons(container: HTMLElement): void {
